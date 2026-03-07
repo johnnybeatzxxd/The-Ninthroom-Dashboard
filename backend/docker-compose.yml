@@ -10,7 +10,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-ninthroom}
     ports:
-      - "5432:5432"
+      # HOST:CONTAINER
+      # changed host port to 5433 to avoid conflict with Project 1
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,9 +21,12 @@ services:
     container_name: ninthroom_api
     restart: always
     ports:
-      - "8000:8000"
+      # HOST:CONTAINER
+      # this opens port 8000 on your VPS.
+      - "8001:8000"
     environment:
       DOMAIN: ${DOMAIN:-http://localhost}
+      # the db is still listening on 5432.
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-ninthroom}
     depends_on:
       - db

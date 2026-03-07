@@ -1,0 +1,3834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ninth Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #060709;
+  --s1:      #0C0D12;
+  --s2:      #111318;
+  --s3:      #181A22;
+  --border:  #1C1F2B;
+  --border2: #262A38;
+  --tw:      #1D9BF0;
+  --ig:      #E1306C;
+  --of:      #00C4FF;
+  --text:    #E8EBF4;
+  --sub:     #8B91A8;
+  --muted:   #454A62;
+  --green:   #0FD688;
+  --red:     #F04747;
+  --yellow:  #F5A623;
+  --purple:  #9B6DFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden;}
+
+/* ambient glow */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 50% 35% at 75% -5%,rgba(0,196,255,.055) 0%,transparent 65%),
+    radial-gradient(ellipse 35% 25% at 15% 105%,rgba(225,48,108,.04) 0%,transparent 55%),
+    radial-gradient(ellipse 25% 20% at 50% 50%,rgba(155,109,255,.02) 0%,transparent 60%);
+}
+
+.app{position:relative;z-index:1;display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:230px;flex-shrink:0;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+  overflow:hidden;
+}
+.sidebar::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,196,255,.3),transparent);
+}
+
+.logo{padding:28px 22px 24px;border-bottom:1px solid var(--border);}
+.logo-mark{display:flex;align-items:center;gap:9px;margin-bottom:5px;}
+.logo-icon{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,#0C2740,#0a4a6e);
+  border:1px solid rgba(0,196,255,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;
+}
+.logo-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;letter-spacing:-.3px;color:var(--text);}
+.logo-sub{font-size:9.5px;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase;padding-left:37px;}
+
+.nav-section{padding:18px 0 0;}
+.nav-label{font-size:9px;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;padding:0 22px 8px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 22px;font-size:11.5px;color:var(--sub);
+  cursor:pointer;border-left:2px solid transparent;
+  transition:all .15s ease;margin-bottom:1px;user-select:none;
+  position:relative;
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03);}
+.nav-item.active{color:var(--text);border-left-color:var(--of);background:rgba(0,196,255,.05);}
+.nav-item.active .nav-icon{color:var(--of);}
+.nav-icon{font-size:13px;width:18px;text-align:center;color:var(--muted);transition:color .15s;}
+
+.sidebar-foot{
+  margin-top:auto;padding:18px 22px;
+  border-top:1px solid var(--border);
+  background:linear-gradient(0deg,rgba(0,196,255,.02),transparent);
+}
+.foot-date{font-size:10px;color:var(--muted);margin-bottom:3px;}
+.foot-time{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.5px;color:var(--text);margin-bottom:8px;}
+.live-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:9.5px;color:var(--green);letter-spacing:1px;
+  background:rgba(15,214,136,.07);border:1px solid rgba(15,214,136,.18);
+  border-radius:20px;padding:3px 9px;
+}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+
+/* ── MAIN ── */
+.main{flex:1;padding:36px 40px;overflow-x:hidden;min-width:0;}
+.page{display:none;}
+.page.active{display:block;animation:fadeUp .28s cubic-bezier(.16,1,.3,1);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── PAGE HEADER ── */
+.page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;}
+.page-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.6px;margin-bottom:5px;line-height:1;}
+.page-sub{font-size:11.5px;color:var(--sub);}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.card:hover{border-color:var(--border2);}
+.card-title{
+  font-size:9.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
+}
+
+/* ── STAT CARDS ── */
+.sc{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:14px;padding:20px 22px;
+  position:relative;overflow:hidden;transition:border-color .2s,transform .15s;
+}
+.sc:hover{border-color:var(--border2);transform:translateY(-1px);}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;}
+.sc.tw::before{background:linear-gradient(90deg,var(--tw),rgba(29,155,240,.1));}
+.sc.ig::before{background:linear-gradient(90deg,var(--ig),rgba(225,48,108,.1));}
+.sc.of::before{background:linear-gradient(90deg,var(--of),rgba(0,196,255,.1));}
+.sc.gn::before{background:linear-gradient(90deg,var(--green),rgba(15,214,136,.1));}
+.sc.yw::before{background:linear-gradient(90deg,var(--yellow),rgba(245,166,35,.1));}
+.sc.pu::before{background:linear-gradient(90deg,var(--purple),rgba(155,109,255,.1));}
+/* subtle glow corner */
+.sc::after{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:100px;height:100px;border-radius:50%;
+  opacity:.04;
+}
+.sc.tw::after{background:var(--tw);}
+.sc.ig::after{background:var(--ig);}
+.sc.of::after{background:var(--of);}
+.sc.pu::before{background:linear-gradient(90deg,var(--purple),rgba(155,109,255,.1));}
+.sc.pu::after{background:var(--purple);}
+
+.sc-label{font-size:9.5px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.sc-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:34px;letter-spacing:-1.5px;line-height:1;margin-bottom:8px;}
+.sc-delta{font-size:11px;color:var(--sub);}
+.sc-delta.up{color:var(--green);}
+.sc-delta.dn{color:var(--red);}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:4px;letter-spacing:.4px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;}
+.pill-tw{background:rgba(29,155,240,.1);color:var(--tw);border:1px solid rgba(29,155,240,.2);}
+.pill-ig{background:rgba(225,48,108,.1);color:var(--ig);border:1px solid rgba(225,48,108,.2);}
+.pill-of{background:rgba(0,196,255,.1);color:var(--of);border:1px solid rgba(0,196,255,.2);}
+.pill-gn{background:rgba(15,214,136,.1);color:var(--green);border:1px solid rgba(15,214,136,.2);}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-top:12px;}
+.prog-track{background:var(--s3);border-radius:4px;height:5px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;transition:width .9s cubic-bezier(.16,1,.3,1);}
+
+/* ── BUDGET STATUS ── */
+.bstat{display:flex;align-items:center;gap:7px;font-size:11px;padding:8px 12px;border-radius:8px;margin-top:10px;}
+.bstat.ok{background:rgba(15,214,136,.07);border:1px solid rgba(15,214,136,.18);color:var(--green);}
+.bstat.warn{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.18);color:var(--yellow);}
+.bstat.crit{background:rgba(240,71,71,.07);border:1px solid rgba(240,71,71,.18);color:var(--red);}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.tbl th{text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:0 0 12px;border-bottom:1px solid var(--border);font-weight:400;}
+.tbl td{padding:11px 0;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;}
+.tbl tr:hover td{background:rgba(255,255,255,.012);}
+
+/* ── CHART BOX ── */
+.chart-box{position:relative;}
+
+/* ── FORMS ── */
+.fsec-title{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:9.5px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;}
+.inp{
+  background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  padding:11px 14px;border-radius:9px;outline:none;
+  transition:border-color .15s,background .15s;width:100%;
+}
+.inp:focus{border-color:rgba(0,196,255,.45);background:rgba(0,196,255,.03);}
+.inp::placeholder{color:var(--muted);}
+select.inp{cursor:pointer;}
+
+/* ── BUTTONS ── */
+.btn-primary{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,#0099CC,#00C4FF);
+  color:#000;border:none;border-radius:9px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;
+  letter-spacing:.3px;cursor:pointer;transition:opacity .15s,transform .1s;margin-top:4px;
+}
+.btn-primary:hover{opacity:.88;}
+.btn-primary:active{transform:scale(.98);}
+.btn-tw{background:linear-gradient(135deg,#0f6eab,#1D9BF0)!important;color:#fff!important;}
+.btn-ig{background:linear-gradient(135deg,#8a1a3d,#E1306C)!important;color:#fff!important;}
+.btn-gn{background:linear-gradient(135deg,#0a8050,#0FD688)!important;color:#000!important;}
+
+.btn-sm{
+  padding:6px 14px;background:var(--s2);border:1px solid var(--border);
+  color:var(--sub);border-radius:7px;font-family:'JetBrains Mono',monospace;
+  font-size:11px;cursor:pointer;transition:all .15s;
+}
+.btn-sm:hover{color:var(--text);border-color:var(--border2);}
+.btn-sm.danger:hover{color:var(--red);border-color:rgba(240,71,71,.35);}
+
+/* ── METER ROW ── */
+.meter-row{display:flex;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid var(--border);}
+.meter-row:last-child{border-bottom:none;}
+.meter-plat{width:110px;}
+.meter-bar-wrap{flex:1;}
+.meter-bar-lbl{display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:5px;color:var(--sub);}
+.meter-bar-track{height:8px;background:var(--s3);border-radius:5px;overflow:hidden;}
+.meter-bar-fill{height:100%;border-radius:5px;transition:width 1s cubic-bezier(.16,1,.3,1);}
+.meter-stat{width:110px;text-align:right;}
+.meter-num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;}
+.meter-cap{font-size:10px;color:var(--muted);}
+
+/* ── HISTORY TABLE ── */
+.hist-row{
+  display:grid;
+  grid-template-columns:110px 55px 80px 1fr 85px 85px 85px;
+  align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:11.5px;gap:8px;transition:background .1s;
+}
+.hist-row:hover{background:rgba(255,255,255,.014);}
+.hist-row:last-child{border-bottom:none;}
+.hist-row.hdr{
+  font-size:9px;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--s2);border-radius:10px 10px 0 0;
+}
+.hist-row.hdr:hover{background:var(--s2);}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.filter-btn{
+  padding:5px 13px;border-radius:6px;border:1px solid var(--border);
+  background:var(--s2);color:var(--sub);font-family:'JetBrains Mono',monospace;
+  font-size:10.5px;cursor:pointer;transition:all .15s;
+}
+.filter-btn:hover{color:var(--text);}
+.filter-btn.active{border-color:var(--of);color:var(--of);background:rgba(0,196,255,.06);}
+
+/* ── SUB ENTRY ROW ── */
+.sub-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.sub-row:last-child{border-bottom:none;}
+.sub-big{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--green);min-width:52px;}
+
+/* ── REFILL ROW ── */
+.refill-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.refill-row:last-child{border-bottom:none;}
+
+/* ── CALC PREVIEW ── */
+.calc-prev{display:none;margin-bottom:12px;padding:12px 14px;background:var(--s2);border-radius:9px;border:1px solid var(--border);font-size:11.5px;}
+.calc-line{display:flex;justify-content:space-between;margin-bottom:5px;}
+.calc-line:last-child{margin-bottom:0;}
+
+/* ── TYPE BADGE ── */
+.tbadge{font-size:9.5px;padding:2px 8px;border-radius:4px;}
+.tbadge-dlg{background:rgba(0,196,255,.08);color:var(--of);border:1px solid rgba(0,196,255,.18);}
+.tbadge-sub{background:rgba(15,214,136,.08);color:var(--green);border:1px solid rgba(15,214,136,.18);}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:28px;right:28px;
+  background:var(--s2);border:1px solid var(--border2);
+  border-left:3px solid var(--green);border-radius:12px;
+  padding:14px 18px;z-index:999;min-width:230px;
+  transform:translateY(60px) scale(.95);opacity:0;
+  transition:all .3s cubic-bezier(.16,1,.3,1);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.toast.show{transform:translateY(0) scale(1);opacity:1;}
+.toast-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;margin-bottom:2px;}
+.toast-sub{font-size:11px;color:var(--sub);}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ── EMPTY STATE ── */
+.empty{color:var(--muted);font-size:11.5px;text-align:center;padding:24px 0;}
+
+/* ── SCROLLBAR ── */
+/* ── DEEP ANALYTICS ── */
+.an-stat-row { display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.an-stat-row:last-child { border-bottom:none; }
+.an-stat-label { color:var(--sub);font-size:11px; }
+.an-stat-val   { font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px; }
+.an-stat-delta { font-size:10px;margin-left:8px; }
+
+.an-kpi { background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden; }
+.an-kpi-accent { position:absolute;top:0;left:0;right:0;height:2px; }
+.an-kpi-label  { font-size:9px;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:6px; }
+.an-kpi-val    { font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:24px;letter-spacing:-1px;line-height:1; }
+.an-kpi-sub    { font-size:10px;color:var(--muted);margin-top:5px; }
+
+.dow-row { display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+.dow-label { font-size:10.5px;color:var(--sub);width:28px;flex-shrink:0; }
+.dow-bar-wrap { flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;position:relative; }
+.dow-bar { height:100%;border-radius:4px;transition:width 1s cubic-bezier(.16,1,.3,1); }
+.dow-val { font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--sub);width:36px;text-align:right;flex-shrink:0; }
+
+.h2h-row { display:grid;grid-template-columns:1fr 80px 1fr;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);font-size:11.5px; }
+.h2h-row:last-child { border-bottom:none; }
+.h2h-bar-l { height:6px;border-radius:3px;background:var(--tw);margin-left:auto; }
+.h2h-bar-r { height:6px;border-radius:3px;background:var(--ig); }
+.h2h-metric { text-align:center;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase; }
+.model-btn {
+  display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;
+  border:1px solid transparent;cursor:pointer;transition:all .15s;font-size:11px;
+  font-family:'JetBrains Mono',monospace;color:var(--sub);background:transparent;width:100%;text-align:left;
+}
+.model-btn:hover { background:var(--s2); color:var(--text); }
+.model-btn.active { background:rgba(255,255,255,.04); border-color:var(--border); color:var(--text); }
+.model-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+.model-name-text { flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+/* ── COLOR SWATCHES ── */
+.color-swatch {
+  width:22px;height:22px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:transform .15s,border-color .15s;
+}
+.color-swatch:hover { transform:scale(1.15); }
+.color-swatch.active { border-color:var(--text);transform:scale(1.1); }
+
+/* ── MODEL LIST ROWS ── */
+.model-row { display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.model-row:last-child { border-bottom:none; }
+.model-row-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.model-row-name { flex:1;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700; }
+
+/* ── GOAL PROGRESS ── */
+.goal-prog-track { background:var(--s3);border-radius:6px;height:7px;overflow:hidden;margin-top:8px; }
+.goal-prog-fill  { height:100%;border-radius:6px;transition:width 1s cubic-bezier(.16,1,.3,1); }
+.goal-week-row { display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.goal-week-row:last-child { border-bottom:none; }
+.goal-status { font-size:10px;padding:2px 8px;border-radius:4px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700; }
+.goal-ok   { background:rgba(15,214,136,.1);color:var(--green);border:1px solid rgba(15,214,136,.2); }
+.goal-warn { background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.2); }
+.goal-miss { background:rgba(240,71,71,.1);color:var(--red);border:1px solid rgba(240,71,71,.2); }
+.goal-none { background:rgba(69,74,98,.1);color:var(--muted);border:1px solid rgba(69,74,98,.2); }
+.ev-row { display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:11.5px; }
+.ev-row:last-child { border-bottom:none; }
+.ev-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px; }
+.ev-cat-strategy { background:var(--of); }
+.ev-cat-content   { background:var(--green); }
+.ev-cat-pricing   { background:var(--yellow); }
+.ev-cat-account   { background:var(--tw); }
+.ev-cat-other     { background:var(--sub); }
+.ev-label { font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;margin-bottom:2px; }
+.ev-meta  { font-size:10.5px;color:var(--muted); }
+.ev-del   { margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;transition:color .15s;flex-shrink:0; }
+.ev-del:hover { color:var(--red); }
+.cat-pill { display:inline-flex;align-items:center;font-size:9.5px;padding:1px 7px;border-radius:3px;letter-spacing:.4px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;margin-left:6px; }
+.cat-strategy { background:rgba(0,196,255,.1);color:var(--of);border:1px solid rgba(0,196,255,.2); }
+.cat-content   { background:rgba(15,214,136,.1);color:var(--green);border:1px solid rgba(15,214,136,.2); }
+.cat-pricing   { background:rgba(245,166,35,.1);color:var(--yellow);border:1px solid rgba(245,166,35,.2); }
+.cat-account   { background:rgba(29,155,240,.1);color:var(--tw);border:1px solid rgba(29,155,240,.2); }
+.cat-other     { background:rgba(139,145,168,.1);color:var(--sub);border:1px solid rgba(139,145,168,.2); }
+#tlEventList { max-height:380px;overflow-y:auto; }
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .main{padding:20px;}
+  .g4,.g3{grid-template-columns:1fr 1fr;}
+  .g2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">IX</div>
+      <div class="logo-name">The Ninth Room</div>
+    </div>
+    <div class="logo-sub">OF Traffic Ops</div>
+  </div>
+
+  <!-- Model Switcher -->
+  <div style="padding:10px 14px 6px;border-bottom:1px solid var(--border);">
+    <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Active Model</div>
+    <div id="model-switcher" style="display:flex;flex-direction:column;gap:3px;"></div>
+    <button onclick="nav('models',null)" style="
+      width:100%;margin-top:6px;padding:6px 8px;background:transparent;
+      border:1px dashed var(--border);color:var(--muted);border-radius:7px;
+      font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;
+      transition:all .15s;text-align:left;
+    " onmouseover="this.style.borderColor='var(--border2)';this.style.color='var(--sub)'"
+       onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      + Manage Models
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Analytics</div>
+    <div class="nav-item active" onclick="nav('overview',this)"><span class="nav-icon">⬡</span> Overview</div>
+    <div class="nav-item" onclick="nav('twitter',this)"><span class="nav-icon">𝕏</span> Twitter</div>
+    <div class="nav-item" onclick="nav('instagram',this)"><span class="nav-icon">◎</span> Instagram</div>
+    <div class="nav-item" onclick="nav('analytics',this)"><span class="nav-icon">◈</span> Deep Analytics</div>
+
+    <div class="nav-label" style="margin-top:20px;">Manage</div>
+    <div class="nav-item" onclick="nav('log',this)"><span class="nav-icon">＋</span> Log Today</div>
+    <div class="nav-item" onclick="nav('subs',this)"><span class="nav-icon">★</span> OF Subs</div>
+    <div class="nav-item" onclick="nav('timeline',this)"><span class="nav-icon">⌇</span> Timeline</div>
+    <div class="nav-item" onclick="nav('report',this)"><span class="nav-icon">📋</span> Weekly Report</div>
+    <div class="nav-item" onclick="nav('goals',this)"><span class="nav-icon">◎</span> Goals</div>
+    <div class="nav-item" onclick="nav('history',this)"><span class="nav-icon">◷</span> History</div>
+    <div class="nav-item" onclick="nav('refill',this)"><span class="nav-icon">↺</span> Refill Convos</div>
+    <div class="nav-item" onclick="nav('settings',this)"><span class="nav-icon">⚙</span> Settings</div>
+  </div>
+
+  <div class="sidebar-foot">
+    <div class="foot-date" id="sideDate"></div>
+    <div class="foot-time" id="sideTime"></div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- ── OVERVIEW ── -->
+  <div class="page active" id="pg-overview">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Overview</div>
+        <div class="page-sub">All platforms · Convo balance &amp; subscriber snapshot</div>
+      </div>
+      <button class="btn-sm" onclick="nav('log',document.querySelectorAll('.nav-item')[3])">+ Log Today</button>
+    </div>
+
+    <!-- Compact goal bars -->
+    <div id="ov-goal-bar" style="display:none;margin-bottom:14px;padding:16px 20px;background:var(--s1);border:1px solid var(--border);border-radius:14px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,var(--of)44,var(--tw)44,var(--ig)44,transparent);"></div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;" id="ov-goal-month-label">Month Goal</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="ov-goal-rows"></div>
+      <button onclick="nav('goals',document.querySelector('[onclick*=goals]'))" style="margin-top:12px;background:transparent;border:none;color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;cursor:pointer;padding:0;transition:color .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">View full Goals →</button>
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Convo Balance <span id="overview-updated" style="font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none;"></span></div>
+      <div id="meterContainer"><div class="empty">No data yet — log a report to see balances</div></div>
+    </div>
+
+    <div class="g2" style="margin-bottom:14px;">
+      <!-- ── TWITTER COLUMN ── -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:9px;color:var(--tw);letter-spacing:2.5px;text-transform:uppercase;padding:0 2px;">𝕏 Twitter</div>
+
+        <div class="sc tw">
+          <div class="sc-label">TW Convos Spent Today</div>
+          <div class="sc-val" id="ov-tw-spent">—</div>
+          <div class="sc-delta" id="ov-tw-spent-d">convos used</div>
+        </div>
+        <div class="sc tw">
+          <div class="sc-label">TW Remaining</div>
+          <div class="sc-val" id="ov-tw-rem">—</div>
+          <div class="sc-delta" id="ov-tw-pct">of budget</div>
+        </div>
+        <div class="sc tw">
+          <div class="sc-label">TW Avg Convos / Day</div>
+          <div class="sc-val" id="ov-tw-per-acc">—</div>
+          <div class="sc-delta" id="ov-tw-per-acc-sub">7-day average</div>
+        </div>
+        <div class="sc of">
+          <div class="sc-label">TW Conv Rate</div>
+          <div class="sc-val" style="color:var(--of)" id="ov-tw-conv">—</div>
+          <div class="sc-delta" id="ov-tw-conv-wow">subs ÷ convos today</div>
+        </div>
+        <div class="sc gn">
+          <div class="sc-label"><span class="pill pill-tw">TW</span> New Subs Today</div>
+          <div class="sc-val" style="color:var(--green)" id="ov-tw-subs">—</div>
+          <div class="sc-delta" id="ov-tw-subs-wow">— all time</div>
+        </div>
+        <div class="sc gn">
+          <div class="sc-label">TW Subs / Account</div>
+          <div class="sc-val" style="color:var(--green)" id="ov-tw-subs-per-acc">—</div>
+          <div class="sc-delta" id="ov-tw-subs-per-acc-wow">7-day avg</div>
+        </div>
+      </div>
+
+      <!-- ── INSTAGRAM COLUMN ── -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:9px;color:var(--ig);letter-spacing:2.5px;text-transform:uppercase;padding:0 2px;">◎ Instagram</div>
+
+        <div class="sc ig">
+          <div class="sc-label">IG Convos Spent Today</div>
+          <div class="sc-val" id="ov-ig-spent">—</div>
+          <div class="sc-delta" id="ov-ig-spent-d">convos used</div>
+        </div>
+        <div class="sc ig">
+          <div class="sc-label">IG Remaining</div>
+          <div class="sc-val" id="ov-ig-rem">—</div>
+          <div class="sc-delta" id="ov-ig-pct">of budget</div>
+        </div>
+        <div class="sc ig">
+          <div class="sc-label">IG Avg Convos / Day</div>
+          <div class="sc-val" id="ov-ig-per-acc">—</div>
+          <div class="sc-delta" id="ov-ig-per-acc-sub">7-day average</div>
+        </div>
+        <div class="sc of">
+          <div class="sc-label">IG Conv Rate</div>
+          <div class="sc-val" style="color:var(--of)" id="ov-ig-conv">—</div>
+          <div class="sc-delta" id="ov-ig-conv-wow">subs ÷ convos today</div>
+        </div>
+        <div class="sc gn">
+          <div class="sc-label"><span class="pill pill-ig">IG</span> New Subs Today</div>
+          <div class="sc-val" style="color:var(--green)" id="ov-ig-subs">—</div>
+          <div class="sc-delta" id="ov-ig-subs-wow">— all time</div>
+        </div>
+        <div class="sc gn">
+          <div class="sc-label">IG Subs / Account</div>
+          <div class="sc-val" style="color:var(--green)" id="ov-ig-subs-per-acc">—</div>
+          <div class="sc-delta" id="ov-ig-subs-per-acc-wow">7-day avg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totals row -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="sc gn">
+        <div class="sc-label">Total Subs Today</div>
+        <div class="sc-val" style="color:var(--green)" id="ov-total-subs-today">—</div>
+        <div class="sc-delta" id="ov-total-subs-today-wow">both platforms</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label">All-Time Subs</div>
+        <div class="sc-val" style="color:var(--green)" id="ov-total-subs-all">—</div>
+        <div class="sc-delta">since tracking began</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Daily Convo Spend — 14 days</div>
+        <div class="chart-box" style="height:200px;"><canvas id="chartOverview"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div id="recentLog"><div class="empty">Nothing logged yet</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TWITTER ── -->
+  <div class="page" id="pg-twitter">
+    <div class="page-hd">
+      <div>
+        <div class="page-title" style="display:flex;align-items:center;gap:10px;">Twitter <span class="pill pill-tw">𝕏</span></div>
+        <div class="page-sub">Convo consumption · balance tracking</div>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="sc tw">
+        <div class="sc-label">Current Balance</div>
+        <div class="sc-val" id="tw-balance">—</div>
+        <div class="sc-delta">convos remaining</div>
+        <div id="tw-budget-bar" class="prog-wrap"></div>
+      </div>
+      <div class="sc tw">
+        <div class="sc-label">Avg Daily Spend</div>
+        <div class="sc-val" id="tw-avg">—</div>
+        <div class="sc-delta">per day · 7-day avg</div>
+      </div>
+      <div class="sc tw">
+        <div class="sc-label">Est. Days Left</div>
+        <div class="sc-val" id="tw-days-left">—</div>
+        <div class="sc-delta" id="tw-days-sub">at current rate</div>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="sc tw">
+        <div class="sc-label">Convos per Account / Day</div>
+        <div class="sc-val" id="tw-per-acc-day">—</div>
+        <div class="sc-delta" id="tw-per-acc-day-sub">across <span id="tw-acc-count">—</span> accounts</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label">Subs per Account / Day</div>
+        <div class="sc-val" style="color:var(--green)" id="tw-subs-per-acc">—</div>
+        <div class="sc-delta">7-day avg</div>
+      </div>
+      <div class="sc pu">
+        <div class="sc-label">Cost per Sub</div>
+        <div class="sc-val" style="color:var(--purple)" id="tw-cps-plat">—</div>
+        <div class="sc-delta">all-time avg</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Convos Spent Per Day</div>
+        <div class="chart-box" style="height:190px;"><canvas id="chartTw"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Log History</div>
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Remaining</th><th>Spent</th><th>Note</th></tr></thead>
+          <tbody id="twTable"><tr><td colspan="4" class="empty">No data yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INSTAGRAM ── -->
+  <div class="page" id="pg-instagram">
+    <div class="page-hd">
+      <div>
+        <div class="page-title" style="display:flex;align-items:center;gap:10px;">Instagram <span class="pill pill-ig">◎</span></div>
+        <div class="page-sub">Convo consumption · balance tracking</div>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="sc ig">
+        <div class="sc-label">Current Balance</div>
+        <div class="sc-val" id="ig-balance">—</div>
+        <div class="sc-delta">convos remaining</div>
+        <div id="ig-budget-bar" class="prog-wrap"></div>
+      </div>
+      <div class="sc ig">
+        <div class="sc-label">Avg Daily Spend</div>
+        <div class="sc-val" id="ig-avg">—</div>
+        <div class="sc-delta">per day · 7-day avg</div>
+      </div>
+      <div class="sc ig">
+        <div class="sc-label">Est. Days Left</div>
+        <div class="sc-val" id="ig-days-left">—</div>
+        <div class="sc-delta" id="ig-days-sub">at current rate</div>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="sc ig">
+        <div class="sc-label">Convos per Account / Day</div>
+        <div class="sc-val" id="ig-per-acc-day">—</div>
+        <div class="sc-delta" id="ig-per-acc-day-sub">across <span id="ig-acc-count">—</span> accounts</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label">Subs per Account / Day</div>
+        <div class="sc-val" style="color:var(--green)" id="ig-subs-per-acc">—</div>
+        <div class="sc-delta">7-day avg</div>
+      </div>
+      <div class="sc pu">
+        <div class="sc-label">Cost per Sub</div>
+        <div class="sc-val" style="color:var(--purple)" id="ig-cps-plat">—</div>
+        <div class="sc-delta">all-time avg</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Convos Spent Per Day</div>
+        <div class="chart-box" style="height:190px;"><canvas id="chartIg"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Log History</div>
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Remaining</th><th>Spent</th><th>Note</th></tr></thead>
+          <tbody id="igTable"><tr><td colspan="4" class="empty">No data yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEEP ANALYTICS ── -->
+  <div class="page" id="pg-analytics">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Deep Analytics</div>
+        <div class="page-sub" id="analytics-sub">Full statistical breakdown · all data from your logs</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="filter-btn active" id="an-30" onclick="setAnFrame(30,this)">30D</button>
+        <button class="filter-btn" id="an-60" onclick="setAnFrame(60,this)">60D</button>
+        <button class="filter-btn" id="an-90" onclick="setAnFrame(90,this)">90D</button>
+        <button class="filter-btn" id="an-all" onclick="setAnFrame(0,this)">All</button>
+      </div>
+    </div>
+
+    <!-- ── ROW 1: Top KPIs ── -->
+    <div id="an-top-kpis" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px;"></div>
+
+    <!-- ── ROW 2: Efficiency + Velocity ── -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Efficiency Metrics</div>
+        <div id="an-efficiency"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Velocity & Trends</div>
+        <div id="an-velocity"></div>
+      </div>
+    </div>
+
+    <!-- ── ROW 3: Platform comparison ── -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Platform Head-to-Head</div>
+      <div id="an-h2h"></div>
+    </div>
+
+    <!-- ── ROW 4: Charts ── -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Daily Subs Distribution</div>
+        <div class="chart-box" style="height:200px;"><canvas id="chartAnSubs"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Conversion Rate Over Time</div>
+        <div class="chart-box" style="height:200px;"><canvas id="chartAnConv"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── ROW 5: Day-of-week heatmap + best days ── -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Day-of-Week Performance</div>
+        <div id="an-dow"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Best & Worst Days</div>
+        <div id="an-bestworst"></div>
+      </div>
+    </div>
+
+    <!-- ── ROW 6: Refill + cost analysis ── -->
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">Refill History & Spend</div>
+        <div id="an-refills"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cost Analysis</div>
+        <div id="an-costs"></div>
+      </div>
+    </div>
+
+    <!-- ── ROW 7: Streaks + consistency ── -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Streaks & Consistency</div>
+      <div id="an-streaks"></div>
+    </div>
+
+  </div>
+
+  <!-- ── LOG TODAY ── -->
+  <div class="page" id="pg-log">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Log Today</div>
+        <div class="page-sub">Enter current convo balance — spend is calculated automatically</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="fsec-title"><span class="pill pill-tw">𝕏</span> Twitter Report</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Current Convo Balance</label>
+            <input class="inp" type="number" id="tw-input-balance" placeholder="e.g. 860" min="0" oninput="calcPreview('tw')">
+          </div>
+          <div class="field">
+            <label>Date <span style="color:var(--muted);font-size:9px;" id="tw-tz-label"></span></label>
+            <input class="inp" type="date" id="tw-input-date">
+          </div>
+        </div>
+        <div class="calc-prev" id="tw-calc-preview">
+          <div class="calc-line"><span style="color:var(--sub)">Previous balance</span><span id="tw-prev-val">—</span></div>
+          <div class="calc-line"><span style="color:var(--sub)">Convos spent today</span><span id="tw-spent-val" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">—</span></div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Note <span style="color:var(--muted);font-size:9px;">(optional)</span></label>
+            <input class="inp" type="text" id="tw-input-note" placeholder="What worked? Any issues?">
+          </div>
+        </div>
+        <button class="btn-primary btn-tw" onclick="logReport('twitter')">Save Twitter Report →</button>
+      </div>
+
+      <div class="card">
+        <div class="fsec-title"><span class="pill pill-ig">◎</span> Instagram Report</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Current Convo Balance</label>
+            <input class="inp" type="number" id="ig-input-balance" placeholder="e.g. 720" min="0" oninput="calcPreview('ig')">
+          </div>
+          <div class="field">
+            <label>Date <span style="color:var(--muted);font-size:9px;" id="ig-tz-label"></span></label>
+            <input class="inp" type="date" id="ig-input-date">
+          </div>
+        </div>
+        <div class="calc-prev" id="ig-calc-preview">
+          <div class="calc-line"><span style="color:var(--sub)">Previous balance</span><span id="ig-prev-val">—</span></div>
+          <div class="calc-line"><span style="color:var(--sub)">Convos spent today</span><span id="ig-spent-val" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">—</span></div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Note <span style="color:var(--muted);font-size:9px;">(optional)</span></label>
+            <input class="inp" type="text" id="ig-input-note" placeholder="What worked? Any issues?">
+          </div>
+        </div>
+        <button class="btn-primary btn-ig" onclick="logReport('instagram')">Save Instagram Report →</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How to automate this</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;font-size:11.5px;color:var(--sub);line-height:1.75;">
+        <div>
+          <div style="color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-bottom:6px;font-size:13px;">① Telegram Bot</div>
+          Bot messages each manager at 8PM: "How many convos left?" They reply with one number → bot updates the dashboard via webhook. Zero effort from you. <span style="color:var(--of);">Free.</span>
+        </div>
+        <div>
+          <div style="color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-bottom:6px;font-size:13px;">② Make.com Flow</div>
+          Managers fill a Google Form → Make.com parses and pushes data here automatically. Setup takes ~1 hour, then it runs itself. <span style="color:var(--of);">$0–9/mo.</span>
+        </div>
+        <div>
+          <div style="color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-bottom:6px;font-size:13px;">③ Direct API</div>
+          If your mass-DM software has an API, Make.com can pull the convo balance every few hours automatically. Full autopilot. <span style="color:var(--of);">Tell me what software you use.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OF SUBS ── -->
+  <div class="page" id="pg-subs">
+    <div class="page-hd">
+      <div>
+        <div class="page-title" style="display:flex;align-items:center;gap:10px;">OF Subs <span class="pill pill-of">OnlyFans</span></div>
+        <div class="page-sub">New subscribers + conversion rate from convos</div>
+      </div>
+    </div>
+
+    <div class="g4" style="margin-bottom:14px;">
+      <div class="sc gn">
+        <div class="sc-label"><span class="pill pill-tw" style="font-size:9px;">TW</span> New Subs Today</div>
+        <div class="sc-val" style="color:var(--green)" id="subs-tw-today">—</div>
+        <div class="sc-delta">from Twitter</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label"><span class="pill pill-ig" style="font-size:9px;">IG</span> New Subs Today</div>
+        <div class="sc-val" style="color:var(--green)" id="subs-ig-today">—</div>
+        <div class="sc-delta">from Instagram</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label">This Week</div>
+        <div class="sc-val" style="color:var(--green)" id="subs-week-total">—</div>
+        <div class="sc-delta">last 7 days</div>
+      </div>
+      <div class="sc gn">
+        <div class="sc-label">All-Time Total</div>
+        <div class="sc-val" style="color:var(--green)" id="subs-alltime">—</div>
+        <div class="sc-delta">since tracking</div>
+      </div>
+    </div>
+
+    <div class="g4" style="margin-top:0;margin-bottom:14px;">
+      <div class="sc of" style="position:relative;">
+        <div class="sc-label">Conversion Today</div>
+        <div class="sc-val" style="color:var(--of)" id="conv-today">—</div>
+        <div class="sc-delta">convos → subs</div>
+        <div style="position:absolute;top:14px;right:16px;font-size:30px;opacity:0.06;font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;">%</div>
+      </div>
+      <div class="sc of">
+        <div class="sc-label">7-Day Avg Conversion</div>
+        <div class="sc-val" style="color:var(--of)" id="conv-avg7">—</div>
+        <div class="sc-delta" id="conv-avg7-sub">rolling average</div>
+      </div>
+      <div class="sc tw">
+        <div class="sc-label"><span class="pill pill-tw" style="font-size:9px;">TW</span> Avg Conversion</div>
+        <div class="sc-val" style="color:var(--tw)" id="conv-tw-avg">—</div>
+        <div class="sc-delta">convos → subs</div>
+      </div>
+      <div class="sc ig">
+        <div class="sc-label"><span class="pill pill-ig" style="font-size:9px;">IG</span> Avg Conversion</div>
+        <div class="sc-val" style="color:var(--ig)" id="conv-ig-avg">—</div>
+        <div class="sc-delta">convos → subs</div>
+      </div>
+    </div>
+
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="sc pu">
+        <div class="sc-label">Cost per Sub — Today</div>
+        <div class="sc-val" style="color:var(--purple)" id="cps-today">—</div>
+        <div class="sc-delta" id="cps-today-sub">at $<span id="cps-rate">0.07</span>/convo</div>
+      </div>
+      <div class="sc pu">
+        <div class="sc-label">Cost per Sub — Twitter</div>
+        <div class="sc-val" style="color:var(--purple)" id="cps-tw">—</div>
+        <div class="sc-delta">all-time avg</div>
+      </div>
+      <div class="sc pu">
+        <div class="sc-label">Cost per Sub — Instagram</div>
+        <div class="sc-val" style="color:var(--purple)" id="cps-ig">—</div>
+        <div class="sc-delta">all-time avg</div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-title">
+          Daily New Subs — 14 days
+          <div style="display:flex;gap:12px;">
+            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);"><span style="width:10px;height:3px;background:var(--tw);display:inline-block;border-radius:2px;"></span>Twitter</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);"><span style="width:10px;height:3px;background:var(--ig);display:inline-block;border-radius:2px;"></span>Instagram</span>
+          </div>
+        </div>
+        <div class="chart-box" style="height:210px;"><canvas id="chartSubs"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          Conversion Rate % — 14 days
+          <div style="display:flex;gap:12px;">
+            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);"><span style="width:10px;height:3px;background:var(--of);display:inline-block;border-radius:2px;"></span>Daily %</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);"><span style="width:10px;height:3px;background:var(--yellow);display:inline-block;border-radius:2px;border-style:dashed;"></span>Avg</span>
+          </div>
+        </div>
+        <div class="chart-box" style="height:210px;"><canvas id="chartConv"></canvas></div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="fsec-title">Log New Subs</div>
+        <div class="form-row full" style="margin-bottom:14px;">
+          <div class="field"><label>Date</label><input class="inp" type="date" id="subs-input-date"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+            <div style="margin-bottom:10px;"><span class="pill pill-tw">𝕏 Twitter</span></div>
+            <div class="field"><label>New subs from Twitter</label><input class="inp" type="number" id="subs-tw-input" placeholder="0" min="0"></div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+            <div style="margin-bottom:10px;"><span class="pill pill-ig">◎ Instagram</span></div>
+            <div class="field"><label>New subs from Instagram</label><input class="inp" type="number" id="subs-ig-input" placeholder="0" min="0"></div>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>Note <span style="color:var(--muted);font-size:9px;">(optional)</span></label><input class="inp" type="text" id="subs-note-input" placeholder="Promo, discount, best content?"></div>
+        </div>
+        <button class="btn-primary btn-gn" onclick="logSubs()">Save Subscriber Report →</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-title">Conversion Breakdown — All Time</div>
+          <div id="convBreakdown"><div class="empty">No data yet</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Entries</div>
+          <div id="subsRecentLog"><div class="empty">No data yet</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TIMELINE ── -->
+  <div class="page" id="pg-timeline">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Timeline</div>
+        <div class="page-sub">Performance over time with custom event annotations</div>
+      </div>
+    </div>
+
+    <!-- Controls row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <!-- Timeframe selector -->
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-right:4px;">Timeframe</span>
+        <button class="filter-btn active" onclick="setTLFrame(7,this)">7D</button>
+        <button class="filter-btn" onclick="setTLFrame(14,this)">14D</button>
+        <button class="filter-btn" onclick="setTLFrame(30,this)">30D</button>
+        <button class="filter-btn" onclick="setTLFrame(60,this)">60D</button>
+        <button class="filter-btn" onclick="setTLFrame(90,this)">90D</button>
+        <button class="filter-btn" onclick="setTLFrame(180,this)">6M</button>
+        <button class="filter-btn" onclick="setTLFrame(365,this)">1Y</button>
+      </div>
+      <!-- Series toggles -->
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span style="font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-right:4px;">Show</span>
+        <button class="filter-btn active" id="tl-tog-tw" onclick="toggleTLSeries('tw',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--tw);margin-right:4px;"></span>TW Convos</button>
+        <button class="filter-btn active" id="tl-tog-ig" onclick="toggleTLSeries('ig',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ig);margin-right:4px;"></span>IG Convos</button>
+        <button class="filter-btn active" id="tl-tog-subs" onclick="toggleTLSeries('subs',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:4px;"></span>Subs</button>
+        <button class="filter-btn active" id="tl-tog-conv" onclick="toggleTLSeries('conv',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--of);margin-right:4px;"></span>Conv %</button>
+      </div>
+    </div>
+
+    <!-- Main chart -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="chart-box" style="height:320px;"><canvas id="chartTimeline"></canvas></div>
+    </div>
+
+    <!-- Events list + add form -->
+    <div class="g2">
+      <!-- Add event form -->
+      <div class="card">
+        <div class="fsec-title">Add Event Marker</div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Date</label>
+            <input class="inp" type="date" id="tl-event-date">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Label</label>
+            <input class="inp" type="text" id="tl-event-label" placeholder="e.g. CTA Changed, New Script, Price Drop…" maxlength="60">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Category</label>
+            <select class="inp" id="tl-event-category">
+              <option value="strategy">Strategy</option>
+              <option value="content">Content</option>
+              <option value="pricing">Pricing</option>
+              <option value="account">Account</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Platform</label>
+            <select class="inp" id="tl-event-platform">
+              <option value="both">Both</option>
+              <option value="twitter">Twitter</option>
+              <option value="instagram">Instagram</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Note <span style="color:var(--muted);font-size:9px;">(optional)</span></label>
+            <input class="inp" type="text" id="tl-event-note" placeholder="More details…">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addTimelineEvent()" style="background:linear-gradient(135deg,#1a0a40,var(--purple));">Add Event →</button>
+      </div>
+
+      <!-- Events log -->
+      <div class="card">
+        <div class="card-title">Events <span id="tl-event-count" style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;"></span></div>
+        <div id="tlEventList"><div class="empty">No events yet — add your first marker</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WEEKLY REPORT ── -->
+  <div class="page" id="pg-report">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Weekly Report</div>
+        <div class="page-sub">Auto-generated performance summary · ready to copy &amp; share</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="field" style="margin:0;">
+          <input class="inp" type="date" id="report-week-end" style="width:160px;">
+        </div>
+        <button class="btn-sm" onclick="generateReport()">Generate →</button>
+      </div>
+    </div>
+
+    <!-- Week selector strip -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;" id="report-quick-weeks"></div>
+
+    <!-- Report output -->
+    <div id="report-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;color:var(--muted);font-size:12px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;opacity:.3;">📋</div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px;color:var(--sub);">Select a week and generate</div>
+      <div>Pick an end date above or choose a quick week below</div>
+    </div>
+
+    <div id="report-output" style="display:none;">
+      <!-- KPI summary row -->
+      <div class="g4" id="report-kpis" style="margin-bottom:14px;"></div>
+
+      <!-- Report text card -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:12px;">
+          Report Text
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-sm" onclick="copyReport()" id="copy-btn">Copy</button>
+            <button class="btn-sm" onclick="downloadPDF()" id="pdf-btn" style="color:var(--of);border-color:rgba(0,196,255,.3);">↓ PDF</button>
+            <select class="inp" id="report-format" onchange="generateReport()" style="width:110px;padding:5px 10px;font-size:10.5px;">
+              <option value="plain">Plain text</option>
+              <option value="markdown">Markdown</option>
+              <option value="slack">Slack</option>
+            </select>
+          </div>
+        </div>
+        <div id="report-text-box" style="
+          background:var(--s2);border:1px solid var(--border);border-radius:10px;
+          padding:20px;font-size:12px;line-height:1.9;color:var(--text);
+          white-space:pre-wrap;font-family:'JetBrains Mono',monospace;
+          max-height:520px;overflow-y:auto;
+        "></div>
+      </div>
+
+      <!-- Breakdown cards -->
+      <div class="g2" id="report-breakdown"></div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="page" id="pg-history">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">History</div>
+        <div class="page-sub">Full log — convos &amp; subscribers</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setHistFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setHistFilter('twitter',this)">Twitter</button>
+        <button class="filter-btn" onclick="setHistFilter('instagram',this)">Instagram</button>
+        <button class="filter-btn" onclick="setHistFilter('subs',this)">OF Subs</button>
+      </div>
+    </div>
+
+    <div class="g3" style="margin-bottom:14px;">
+      <div class="card" style="padding:16px 20px;">
+        <div class="card-title">Avg Convos / Day</div>
+        <div style="display:flex;gap:24px;margin-top:4px;">
+          <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;">Twitter</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;" id="hist-tw-avg">—</div></div>
+          <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;">Instagram</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;" id="hist-ig-avg">—</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:16px 20px;">
+        <div class="card-title">Total OF Subs</div>
+        <div style="display:flex;gap:24px;margin-top:4px;">
+          <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;">Twitter</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;color:var(--green);" id="hist-tw-subs-total">—</div></div>
+          <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:4px;">Instagram</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;color:var(--green);" id="hist-ig-subs-total">—</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:16px 20px;">
+        <div class="card-title">Best Day (Subs)</div>
+        <div id="hist-best-day" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:22px;margin-top:4px;color:var(--green);">—</div>
+        <div id="hist-best-day-sub" style="font-size:11px;color:var(--muted);margin-top:4px;">no data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hist-row hdr">
+        <span>Date</span><span>Type</span><span>Platform</span><span>Note</span>
+        <span style="text-align:right;">Balance</span>
+        <span style="text-align:right;">Spent</span>
+        <span style="text-align:right;">OF Subs</span>
+      </div>
+      <div id="historyTableBody"></div>
+    </div>
+  </div>
+
+  <!-- ── REFILL ── -->
+  <div class="page" id="pg-refill">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Refill Convos</div>
+        <div class="page-sub">Log when you purchase a new convo package</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="fsec-title">Add Refill</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Platform</label>
+            <select class="inp" id="refill-platform"><option value="twitter">Twitter</option><option value="instagram">Instagram</option></select>
+          </div>
+          <div class="field">
+            <label>Convos Purchased</label>
+            <input class="inp" type="number" id="refill-amount" placeholder="e.g. 1000" min="1">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>New Total Balance After Refill</label>
+            <input class="inp" type="number" id="refill-new-balance" placeholder="e.g. 1000">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addRefill()">Confirm Refill →</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Refill History</div>
+        <div id="refillHistory"><div class="empty">No refills logged</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODELS ── -->
+  <div class="page" id="pg-models">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Models</div>
+        <div class="page-sub">Manage your OF model profiles — each has separate data &amp; settings</div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="fsec-title">Add New Model</div>
+        <div class="form-row full">
+          <div class="field"><label>Model Name</label><input class="inp" type="text" id="new-model-name" placeholder="e.g. Mia, Luna, Model 2…"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Accent Color</label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;" id="color-picker">
+              <div class="color-swatch active" data-color="#00C4FF" style="background:#00C4FF;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#E1306C" style="background:#E1306C;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#0FD688" style="background:#0FD688;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#F5A623" style="background:#F5A623;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#9B6DFF" style="background:#9B6DFF;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#F04747" style="background:#F04747;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#1D9BF0" style="background:#1D9BF0;" onclick="pickColor(this)"></div>
+              <div class="color-swatch" data-color="#FFD700" style="background:#FFD700;" onclick="pickColor(this)"></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addModel()" style="margin-top:12px;">Add Model →</button>
+      </div>
+      <div class="card">
+        <div class="card-title">All Models</div>
+        <div id="models-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GOALS ── -->
+  <div class="page" id="pg-goals">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Goals</div>
+        <div class="page-sub" id="goals-model-sub">Monthly subscriber target</div>
+      </div>
+    </div>
+
+    <!-- Big progress bars card -->
+    <div class="card" style="margin-bottom:14px;">
+      <div id="goals-main-bar"><div class="empty">Set a monthly target to see progress</div></div>
+    </div>
+
+    <!-- Target inputs -->
+    <div class="card" style="max-width:520px;">
+      <div class="fsec-title">Monthly Subs Targets</div>
+      <div class="form-row">
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:6px;">Total target <span style="color:var(--muted);font-size:9px;">(TW + IG combined)</span></label>
+          <input class="inp" type="number" id="goal-month-subs" placeholder="e.g. 200" min="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-tw" style="font-size:9px;">TW</span> Twitter target</label>
+          <input class="inp" type="number" id="goal-month-subs-tw" placeholder="e.g. 120" min="1">
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-ig" style="font-size:9px;">IG</span> Instagram target</label>
+          <input class="inp" type="number" id="goal-month-subs-ig" placeholder="e.g. 80" min="1">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveGoals()">Save Targets →</button>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="pg-settings">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-sub">Thresholds, costs &amp; account configuration</div>
+      </div>
+    </div>
+    <div class="g3">
+        <div class="form-row">
+          <div class="field"><label>Warning below (convos left)</label><input class="inp" type="number" id="set-warn" placeholder="300"></div>
+          <div class="field"><label>Critical below (convos left)</label><input class="inp" type="number" id="set-crit" placeholder="100"></div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>Default Package Size</label><input class="inp" type="number" id="set-default-pkg" placeholder="1000"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="fsec-title" style="margin-bottom:14px;">Cost per Convo ($)</div>
+        <div class="form-row">
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-tw" style="font-size:9px;">TW</span> Twitter</label>
+            <input class="inp" type="number" id="set-cost-tw" placeholder="0.07" step="0.001" min="0">
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-ig" style="font-size:9px;">IG</span> Instagram</label>
+            <input class="inp" type="number" id="set-cost-ig" placeholder="0.07" step="0.001" min="0">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="fsec-title" style="margin-bottom:14px;">Active Accounts</div>
+        <div class="form-row">
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-tw" style="font-size:9px;">TW</span> Twitter accounts</label>
+            <input class="inp" type="number" id="set-accounts-tw" placeholder="1" min="1">
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px;"><span class="pill pill-ig" style="font-size:9px;">IG</span> Instagram accounts</label>
+            <input class="inp" type="number" id="set-accounts-ig" placeholder="1" min="1">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="saveSettings()">Save Settings →</button>
+      </div>
+      <div class="card">
+        <div class="fsec-title">Timezone</div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Date calculation timezone <span style="color:var(--muted);font-size:9px;">default: US Eastern</span></label>
+            <select class="inp" id="set-timezone" style="cursor:pointer;">
+              <option value="America/New_York">🇺🇸 Eastern (ET) — New York</option>
+              <option value="America/Chicago">🇺🇸 Central (CT) — Chicago</option>
+              <option value="America/Denver">🇺🇸 Mountain (MT) — Denver</option>
+              <option value="America/Los_Angeles">🇺🇸 Pacific (PT) — Los Angeles</option>
+              <option value="America/Phoenix">🇺🇸 Arizona (no DST)</option>
+              <option value="Europe/London">🇬🇧 London (GMT/BST)</option>
+              <option value="Europe/Paris">🇪🇺 Paris (CET)</option>
+              <option value="Europe/Moscow">🇷🇺 Moscow (MSK)</option>
+              <option value="Asia/Dubai">🇦🇪 Dubai (GST)</option>
+              <option value="UTC">🌐 UTC</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="saveTZ()" style="background:linear-gradient(135deg,#1a3a7a,var(--tw));">Save Timezone →</button>
+      </div>
+      <div class="card">
+        <div class="fsec-title">Security</div>
+        <div class="form-row full">
+          <div class="field">
+            <label>PIN Code <span style="color:var(--muted);font-size:9px;">(4 digits)</span></label>
+            <input class="inp" type="password" id="set-pin" placeholder="••••" maxlength="4" inputmode="numeric">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Confirm New PIN</label>
+            <input class="inp" type="password" id="set-pin-confirm" placeholder="••••" maxlength="4" inputmode="numeric">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="changePin()" style="background:linear-gradient(135deg,#3a1a7a,var(--purple));">Update PIN →</button>
+      </div>
+      <div class="card">
+        <div class="fsec-title">Reset a Day</div>
+        <p style="font-size:11.5px;color:var(--sub);margin-bottom:14px;line-height:1.7;">Delete all logged data for a specific date — convo logs, subs, and refills. Use this to re-enter data if you made a mistake.</p>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Date to reset</label>
+            <input class="inp" type="date" id="reset-day-date">
+          </div>
+          <div class="field">
+            <label>What to clear</label>
+            <select class="inp" id="reset-day-what" style="cursor:pointer;">
+              <option value="all">Everything (convos + subs + refills)</option>
+              <option value="logs">Convo logs only</option>
+              <option value="subs">Subs only</option>
+              <option value="refills">Refills only</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm" style="background:rgba(255,100,60,.12);border-color:rgba(255,100,60,.3);color:#ff7a5a;" onclick="resetDay('twitter')">Reset TW</button>
+          <button class="btn-sm" style="background:rgba(225,48,108,.12);border-color:rgba(225,48,108,.3);color:#E1306C;" onclick="resetDay('instagram')">Reset IG</button>
+          <button class="btn-sm danger" onclick="resetDay('both')">Reset Both</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fsec-title" style="color:var(--red);">Danger Zone</div>
+        <p style="font-size:11.5px;color:var(--sub);margin-bottom:16px;line-height:1.7;">This will permanently delete all logged data including convo reports, subscriber entries, and refill history. This cannot be undone.</p>
+        <button class="btn-sm danger" onclick="clearAll()">Delete all data</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title">Saved</div>
+  <div class="toast-sub" id="toast-sub">Data updated successfully</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const MODEL_DEFAULT = () => ({
+  twitter:   { logs: [], refills: [] },
+  instagram: { logs: [], refills: [] },
+  subs:      [],
+  events:    [],
+  goals:     { weekSubs: null, weekConvRate: null, monthSubs: null, maxCPS: null },
+  settings:  { warnAt: 300, critAt: 100, defaultPkg: 1000, costTW: 0.07, costIG: 0.07, accountsTW: 1, accountsIG: 1 }
+});
+
+const APP_DEFAULT = {
+  models: [{ id: 1, name: 'Model 1', color: '#00C4FF', ...MODEL_DEFAULT() }],
+  activeModelId: 1,
+  globalSettings: { pin: '1234' }
+};
+
+// Load & migrate from old flat structure
+let APP = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('agencyHQ'));
+    if (!raw) return structuredClone(APP_DEFAULT);
+    // Migration: old format had twitter/instagram/subs/events/settings at top level
+    if (raw.twitter && !raw.models) {
+      const migrated = structuredClone(APP_DEFAULT);
+      Object.assign(migrated.models[0], {
+        twitter:  raw.twitter  || { logs: [], refills: [] },
+        instagram:raw.instagram|| { logs: [], refills: [] },
+        subs:     raw.subs     || [],
+        events:   raw.events   || [],
+        goals:    { weekSubs: null, weekConvRate: null, monthSubs: null, maxCPS: null },
+        settings: raw.settings ? { ...MODEL_DEFAULT().settings, ...raw.settings } : MODEL_DEFAULT().settings
+      });
+      if (raw.settings?.pin) migrated.globalSettings.pin = raw.settings.pin;
+      return migrated;
+    }
+    // Ensure all models have goals field
+    (raw.models||[]).forEach(m => { if (!m.goals) m.goals = { weekSubs: null, weekConvRate: null, monthSubs: null, maxCPS: null }; });
+    if (!raw.globalSettings) raw.globalSettings = { pin: '1234' };
+    return raw;
+  } catch(e) { return structuredClone(APP_DEFAULT); }
+})();
+
+// Active model accessor
+function M() {
+  return APP.models.find(m => m.id === APP.activeModelId) || APP.models[0];
+}
+// Shorthand aliases so existing code still works
+function getS()  { return M(); }           // full model data
+// We proxy S-dot access through M() — reassign after model switch
+let S = new Proxy({}, { get: (_, k) => M()[k], set: (_, k, v) => { M()[k] = v; return true; } });
+
+let charts = {};
+function save() { try { localStorage.setItem('agencyHQ', JSON.stringify(APP)); } catch(e){} }
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('pg-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  requestAnimationFrame(() => renderPage(page));
+}
+
+function renderPage(page) {
+  if      (page === 'overview')  renderOverview();
+  else if (page === 'twitter')   { if(charts.twitter){charts.twitter.destroy();charts.twitter=null;} renderPlatform('twitter'); }
+  else if (page === 'instagram') { if(charts.instagram){charts.instagram.destroy();charts.instagram=null;} renderPlatform('instagram'); }
+  else if (page === 'refill')    renderRefillHistory();
+  else if (page === 'settings')  renderSettingsForm();
+  else if (page === 'history')   renderHistoryPage();
+  else if (page === 'goals')     renderGoalsPage();
+  else if (page === 'models')    renderModelsPage();
+  else if (page === 'log')       initLogDates();
+  else if (page === 'subs') {
+    if (charts.subs) { charts.subs.destroy(); charts.subs = null; }
+    if (charts.conv) { charts.conv.destroy(); charts.conv = null; }
+    renderSubsPage();
+  }
+  else if (page === 'timeline') {
+    if (charts.timeline) { charts.timeline.destroy(); charts.timeline = null; }
+    renderTimelinePage();
+  }
+  else if (page === 'analytics') {
+    ['chartAnSubs','chartAnConv'].forEach(id => { if(charts[id]){charts[id].destroy();charts[id]=null;} });
+    renderAnalyticsPage();
+  }
+  else if (page === 'report')    renderReportPage();
+}
+
+function renderAll() {
+  renderModelSwitcher();
+  // Always re-render these (sidebar-independent)
+  renderOverview();
+  // Re-render active page's platform charts
+  if (charts.twitter)   { charts.twitter.destroy();   charts.twitter   = null; }
+  if (charts.instagram) { charts.instagram.destroy(); charts.instagram = null; }
+  renderPlatform('twitter');
+  renderPlatform('instagram');
+  renderRefillHistory();
+  renderSettingsForm();
+  // Conditionally re-render chart-heavy pages only if active
+  const active = document.querySelector('.page.active');
+  const pg = active ? active.id.replace('pg-', '') : '';
+  if (pg === 'subs') {
+    if (charts.subs) { charts.subs.destroy(); charts.subs = null; }
+    if (charts.conv) { charts.conv.destroy(); charts.conv = null; }
+    renderSubsPage();
+  }
+  if (pg === 'timeline') {
+    if (charts.timeline) { charts.timeline.destroy(); charts.timeline = null; }
+    renderTimelinePage();
+  }
+  if (pg === 'history')   renderHistoryPage();
+  if (pg === 'goals')     renderGoalsPage();
+  if (pg === 'report')    renderReportPage();
+  if (pg === 'analytics') {
+    ['chartAnSubs','chartAnConv'].forEach(id => { if(charts[id]){charts[id].destroy();charts[id]=null;} });
+    renderAnalyticsPage();
+  }
+}
+
+// ═══════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════
+function clock() {
+  const d = new Date();
+  const tz = getActiveTZ();
+  const de = document.getElementById('sideDate'), te = document.getElementById('sideTime');
+  if (de) de.textContent = d.toLocaleDateString('en-US', { timeZone:tz, weekday:'short', month:'short', day:'numeric' });
+  if (te) te.textContent = d.toLocaleTimeString('en-US', { timeZone:tz, hour:'2-digit', minute:'2-digit' }) + ' ' + tz.split('/').pop().replace('_',' ').substring(0,2).toUpperCase() + 'T';
+}
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// TIMEZONE HELPERS (default: US Eastern)
+// ═══════════════════════════════════════
+const TZ_DEFAULT = 'America/New_York';
+function getActiveTZ() { return APP.globalSettings?.timezone || TZ_DEFAULT; }
+
+// Get current date string in active timezone
+function todayInTZ(tz) {
+  tz = tz || getActiveTZ();
+  return new Date().toLocaleDateString('en-US', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+// Normalize any date to a "day string" in the active TZ for comparison
+function dayStr(dateInput, tz) {
+  tz = tz || getActiveTZ();
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  return d.toLocaleDateString('en-US', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+// Today's YYYY-MM-DD in active TZ (for date inputs)
+function todayInputVal(tz) {
+  tz = tz || getActiveTZ();
+  const parts = new Date().toLocaleDateString('en-US', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit' }).split('/');
+  return `${parts[2]}-${parts[0]}-${parts[1]}`;
+}
+
+// Store date as ISO using a specific date string + noon to avoid timezone drift
+function dateToISO(dateVal) {
+  // dateVal = "YYYY-MM-DD"
+  return new Date(dateVal + 'T12:00:00').toISOString();
+}
+
+// Given an ISO string, return dayStr of the PREVIOUS day — reliably
+function prevDayStr(isoOrDate) {
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : new Date(isoOrDate);
+  d.setDate(d.getDate() - 1);
+  return dayStr(d);
+}
+
+// Given a dayStr (MM/DD/YYYY), get a Date object at noon (for +/- day math)
+function dayStrToDate(ds) {
+  // ds = "MM/DD/YYYY"
+  const [m, day, y] = ds.split('/');
+  return new Date(`${y}-${m}-${day}T12:00:00`);
+}
+
+function fmt(n) { return (n === null || n === undefined) ? '—' : Number(n).toLocaleString(); }
+function today() { return todayInTZ(); }
+function fmtDate(iso) { return new Date(iso).toLocaleDateString('en-US', { timeZone: getActiveTZ(), month:'short', day:'numeric' }); }
+function fmtDT(iso) {
+  const tz = getActiveTZ();
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US',{timeZone:tz,month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+}
+function getLastLog(p) { const l = S[p].logs; return l.length ? l[l.length-1] : null; }
+function getPrevBalance(p) {
+  const todayStr = today();
+  for (let i = S[p].logs.length-1; i >= 0; i--) {
+    if (dayStr(S[p].logs[i].date) !== todayStr) return S[p].logs[i].balance;
+  }
+  const r = S[p].refills;
+  return r.length ? r[r.length-1].newBalance : null;
+}
+function getDailySpend(p, days=14) {
+  const labels=[], data=[];
+  const tz = getActiveTZ();
+  for (let i=days-1; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dStr = dayStr(d);
+    labels.push(d.toLocaleDateString('en-US',{timeZone:tz,month:'short',day:'numeric'}));
+    // Sum stored spent field (already refill-adjusted) for all logs on this day
+    const spent = S[p].logs
+      .filter(l => dayStr(l.date) === dStr)
+      .reduce((sum, l) => sum + (l.spent || 0), 0);
+    data.push(spent);
+  }
+  return {labels, data};
+}
+function getAvgSpend(p, days=7) {
+  const {data} = getDailySpend(p, days);
+  const nz = data.filter(d => d>0);
+  return nz.length ? Math.round(nz.reduce((a,b)=>a+b,0)/nz.length) : 0;
+}
+
+// ═══════════════════════════════════════
+// CHART DEFAULTS
+// ═══════════════════════════════════════
+function CD() {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#111318', borderColor:'#262A38', borderWidth:1,
+        titleColor:'#E8EBF4', bodyColor:'#8B91A8', padding:12, cornerRadius:10,
+        titleFont:{family:'Plus Jakarta Sans',weight:'700',size:12},
+        bodyFont:{family:'JetBrains Mono',size:11}
+      }
+    },
+    scales:{
+      x:{grid:{color:'rgba(28,31,43,.8)',drawTicks:false}, ticks:{color:'#454A62',font:{family:'JetBrains Mono',size:10},padding:6}},
+      y:{grid:{color:'rgba(28,31,43,.8)',drawTicks:false}, ticks:{color:'#454A62',font:{family:'JetBrains Mono',size:10},padding:6}, border:{display:false}}
+    }
+  };
+}
+
+// ═══════════════════════════════════════
+// LOG REPORT
+// ═══════════════════════════════════════
+function calcPreview(prefix) {
+  const p = prefix==='tw' ? 'twitter' : 'instagram';
+  const val = parseInt(document.getElementById(`${prefix}-input-balance`).value);
+  const el = document.getElementById(`${prefix}-calc-preview`);
+  if (isNaN(val) || val < 0) { el.style.display = 'none'; return; }
+
+  // Last non-refill log (any day) — matches logReport logic exactly
+  const prevLog = [...S[p].logs].reverse().find(l => !l.note?.startsWith('Refill'));
+  if (!prevLog) { el.style.display = 'none'; return; }
+
+  const todayDs = today();
+  const refillsToday = (S[p].refills||[])
+    .filter(r => dayStr(r.date) === todayDs)
+    .reduce((sum, r) => sum + (r.amount||0), 0);
+
+  const base = prevLog.balance + refillsToday;
+  const spent = base - val;
+  document.getElementById(`${prefix}-prev-val`).textContent = refillsToday > 0
+    ? `${fmt(prevLog.balance)} + ${fmt(refillsToday)} refill = ${fmt(base)}`
+    : fmt(prevLog.balance);
+  const se = document.getElementById(`${prefix}-spent-val`);
+  se.textContent = spent > 0 ? `−${fmt(spent)}` : spent === 0 ? '0' : `+${fmt(Math.abs(spent))} (check refill)`;
+  se.style.color = spent > 0 ? 'var(--red)' : spent === 0 ? 'var(--muted)' : 'var(--yellow)';
+  el.style.display = 'block';
+}
+
+function initLogDates() {
+  const v = todayInputVal();
+  const tw = document.getElementById('tw-input-date');
+  const ig = document.getElementById('ig-input-date');
+  if (tw && !tw.value) tw.value = v;
+  if (ig && !ig.value) ig.value = v;
+  const tz = getActiveTZ();
+  const lbl = tz.split('/').pop().replace('_',' ');
+  const twL = document.getElementById('tw-tz-label');
+  const igL = document.getElementById('ig-tz-label');
+  if (twL) twL.textContent = lbl;
+  if (igL) igL.textContent = lbl;
+}
+
+function saveTZ() {
+  const v = document.getElementById('set-timezone').value;
+  APP.globalSettings.timezone = v;
+  save();
+  renderAll();
+  toast('Timezone saved ✓', v.split('/').pop().replace('_',' '), 'var(--tw)');
+}
+
+function logReport(p) {
+  const px = p==='twitter'?'tw':'ig';
+  const balance = parseInt(document.getElementById(`${px}-input-balance`).value);
+  const note = document.getElementById(`${px}-input-note`).value.trim();
+  const dateEl = document.getElementById(`${px}-input-date`);
+  const dateVal = dateEl?.value || todayInputVal();
+  if (isNaN(balance)||balance<0) { toast('Error','Please enter a valid convo balance','var(--red)'); return; }
+
+  const logDate = dateToISO(dateVal);
+  const logDayStr = dayStr(logDate);
+
+  // Last balance before this entry (any day, ignoring refill-only logs)
+  const prevLog = [...S[p].logs].reverse().find(l => !l.note?.startsWith('Refill'));
+
+  // Refills logged on the SAME day as this entry
+  const refillsToday = (S[p].refills||[])
+    .filter(r => dayStr(r.date) === logDayStr)
+    .reduce((sum, r) => sum + (r.amount||0), 0);
+
+  // spent = prevBalance + refillsOnDay - currentBalance
+  const spent = prevLog ? Math.max(prevLog.balance + refillsToday - balance, 0) : null;
+
+  S[p].logs.push({date: logDate, balance, note, spent});
+  save(); renderAll();
+  document.getElementById(`${px}-input-balance`).value = '';
+  document.getElementById(`${px}-input-note`).value = '';
+  if (dateEl) dateEl.value = todayInputVal();
+  document.getElementById(`${px}-calc-preview`).style.display = 'none';
+  toast('Logged ✓', `${p==='twitter'?'Twitter':'Instagram'}: ${fmt(balance)} remaining${spent?` · −${fmt(spent)} today`:''}`, 'var(--green)');
+}
+
+function addRefill() {
+  const p = document.getElementById('refill-platform').value;
+  const amount = parseInt(document.getElementById('refill-amount').value);
+  const newBal = parseInt(document.getElementById('refill-new-balance').value);
+  if (isNaN(amount)||isNaN(newBal)) { toast('Error','Please fill in all fields','var(--red)'); return; }
+  S[p].refills.push({date:new Date().toISOString(), amount, newBalance:newBal});
+  S[p].logs.push({date:new Date().toISOString(), balance:newBal, note:`Refill +${fmt(amount)}`, spent:0});
+  save(); renderAll();
+  document.getElementById('refill-amount').value = '';
+  document.getElementById('refill-new-balance').value = '';
+  toast('Refill logged ✓', `${p==='twitter'?'Twitter':'Instagram'}: +${fmt(amount)} convos added`, 'var(--of)');
+}
+
+function saveSettings() {
+  S.settings.warnAt = parseInt(document.getElementById('set-warn').value)||300;
+  S.settings.critAt = parseInt(document.getElementById('set-crit').value)||100;
+  S.settings.defaultPkg = parseInt(document.getElementById('set-default-pkg').value)||1000;
+  S.settings.costTW = parseFloat(document.getElementById('set-cost-tw').value)||0.07;
+  S.settings.costIG = parseFloat(document.getElementById('set-cost-ig').value)||0.07;
+  S.settings.accountsTW = parseInt(document.getElementById('set-accounts-tw').value)||1;
+  S.settings.accountsIG = parseInt(document.getElementById('set-accounts-ig').value)||1;
+  save(); toast('Settings saved','Configuration updated','var(--green)');
+}
+
+function resetDay(platform) {
+  const dateEl = document.getElementById('reset-day-date');
+  const what = document.getElementById('reset-day-what').value;
+  if (!dateEl.value) { toast('Error', 'Pick a date first', 'var(--red)'); return; }
+  const ds = dayStr(dateEl.value + 'T12:00:00');
+  const platforms = platform === 'both' ? ['twitter','instagram'] : [platform];
+  const fmtDs = new Date(dateEl.value + 'T12:00:00').toLocaleDateString('en-US', {timeZone:getActiveTZ(), month:'short', day:'numeric', year:'numeric'});
+
+  if (!confirm(`Reset ${what === 'all' ? 'all data' : what} for ${fmtDs} on ${platform === 'both' ? 'Twitter + Instagram' : platform}?`)) return;
+
+  platforms.forEach(p => {
+    if (what === 'all' || what === 'refills') {
+      S[p].refills = (S[p].refills||[]).filter(r => dayStr(r.date) !== ds);
+    }
+    if (what === 'all' || what === 'logs') {
+      // Remove logs for that day
+      S[p].logs = S[p].logs.filter(l => dayStr(l.date) !== ds);
+      // Recalculate spent on every remaining log so chain stays correct
+      S[p].logs.forEach((l, i) => {
+        if (l.note?.startsWith('Refill')) { l.spent = 0; return; }
+        const lDs = dayStr(l.date);
+        const prev = S[p].logs.slice(0, i).reverse().find(ll => !ll.note?.startsWith('Refill'));
+        const refillsOnDay = (S[p].refills||[])
+          .filter(r => dayStr(r.date) === lDs)
+          .reduce((sum,r) => sum+(r.amount||0), 0);
+        l.spent = prev ? Math.max(prev.balance + refillsOnDay - l.balance, 0) : null;
+      });
+    }
+  });
+  if (what === 'all' || what === 'subs') {
+    S.subs = (S.subs||[]).filter(s => dayStr(s.date) !== ds);
+  }
+
+  dateEl.value = '';
+  save(); renderAll();
+  toast('Day reset ✓', `${fmtDs} data cleared`, 'var(--of)');
+}
+
+function clearAll() {
+  if (confirm('Delete ALL data for ' + M().name + '? This cannot be undone.')) {
+    const id = M().id, name = M().name, color = M().color;
+    Object.assign(M(), MODEL_DEFAULT(), { id, name, color });
+    save(); renderAll();
+    toast('Cleared', M().name + ' data deleted', 'var(--red)');
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════
+function budgetBar(bal, pkg) {
+  const pct = Math.min(100, Math.round(bal/pkg*100));
+  const color = pct>30?'var(--green)':pct>10?'var(--yellow)':'var(--red)';
+  return `<div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>`;
+}
+function budgetStatus(bal) {
+  const {warnAt,critAt} = S.settings;
+  if (bal<=critAt) return `<div class="bstat crit">⚠ Critical — refill soon</div>`;
+  if (bal<=warnAt) return `<div class="bstat warn">⚡ Balance running low</div>`;
+  return `<div class="bstat ok">✓ Balance healthy</div>`;
+}
+
+// ═══════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════
+function renderOvGoalBar() {
+  const bar = document.getElementById('ov-goal-bar');
+  if (!bar) return;
+  if (!M().goals) M().goals = {};
+  const g = M().goals;
+  if (!g.monthSubs && !g.monthSubsTW && !g.monthSubsIG) { bar.style.display = 'none'; return; }
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayOfMonth  = now.getDate();
+  const dayPct      = Math.round(dayOfMonth / daysInMonth * 100);
+  const daysLeft    = daysInMonth - dayOfMonth;
+  const monthName   = now.toLocaleString('en-US', { month: 'long' });
+
+  let twSubs = 0, igSubs = 0;
+  for (let d = new Date(monthStart); d <= now; d.setDate(d.getDate() + 1)) {
+    const e = (M().subs || []).find(s => dayStr(s.date) === dayStr(d));
+    if (e) { twSubs += e.tw || 0; igSubs += e.ig || 0; }
+  }
+  const totalSubs = twSubs + igSubs;
+
+  function miniBar(label, color, current, target) {
+    if (!target) return '';
+    const pct    = Math.min(100, Math.round(current / target * 100));
+    const done   = pct >= 100;
+    const ahead  = pct >= dayPct;
+    const barClr = done ? '#0FD688' : ahead ? '#0FD688' : pct >= dayPct - 15 ? '#F5A623' : '#F04747';
+    const needed = daysLeft > 0 ? Math.ceil(Math.max(0, target - current) / daysLeft) : 0;
+    const pace   = done ? '🎯' : ahead ? `⚡ ${needed}/d` : `${needed}/d`;
+    return `<div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:10px;color:${color};font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;width:80px;flex-shrink:0;">${label}</span>
+      <div style="position:relative;flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${dayPct}%;background:rgba(255,255,255,.05);border-right:1px dashed rgba(255,255,255,.1);"></div>
+        <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:${barClr};border-radius:3px;box-shadow:0 0 6px ${barClr}44;transition:width 1.2s cubic-bezier(.16,1,.3,1);"></div>
+      </div>
+      <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:${barClr};width:32px;text-align:right;">${pct}%</span>
+      <span style="font-size:10px;color:var(--muted);width:70px;">${current}/${target}</span>
+      <span style="font-size:10px;color:var(--muted);width:60px;">${pace}</span>
+    </div>`;
+  }
+
+  bar.style.display = 'block';
+  document.getElementById('ov-goal-month-label').textContent = monthName + ' Goals';
+  document.getElementById('ov-goal-rows').innerHTML =
+    miniBar('Total', 'var(--of)', totalSubs, g.monthSubs) +
+    miniBar('𝕏 Twitter', '#1D9BF0', twSubs, g.monthSubsTW) +
+    miniBar('◎ Instagram', '#E1306C', igSubs, g.monthSubsIG);
+}
+
+function renderOverview() {
+  if (!S.subs) S.subs=[];
+  // ── compact goal bar ──
+  renderOvGoalBar();
+
+  const twL = getLastLog('twitter'), igL = getLastLog('instagram');
+  const pkg = S.settings.defaultPkg;
+
+  // ── WoW helper ──
+  // Returns HTML string: arrow + % change vs prev week, or '' if no data
+  function wow(curr, prev, higherIsBetter = true, suffix = '') {
+    if (curr === null || curr === undefined || prev === null || prev === undefined || prev === 0) return suffix ? `<span style="color:var(--muted)">${suffix}</span>` : '';
+    const pct = ((curr - prev) / Math.abs(prev)) * 100;
+    if (Math.abs(pct) < 0.5) return `<span style="color:var(--muted)">→ flat vs last week</span>`;
+    const up = pct > 0;
+    const good = up === higherIsBetter;
+    const color = good ? 'var(--green)' : 'var(--red)';
+    const arrow = up ? '↑' : '↓';
+    return `<span style="color:${color};font-weight:700;">${arrow} ${Math.abs(pct).toFixed(1)}%</span><span style="color:var(--muted)"> vs last week</span>`;
+  }
+
+  // ── Same-day-last-week helpers ──
+  // sameDayLastWeek = 7 days ago
+  function sdlwSpend(p) {
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    const dStr = dayStr(d);
+    return S[p].logs.filter(l => dayStr(l.date) === dStr).reduce((s,l) => s+(l.spent||0), 0) || null;
+  }
+  function sdlwSubs(platform) {
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    const e = S.subs.find(s => dayStr(s.date) === dayStr(d));
+    if (!e) return null;
+    return platform === 'twitter' ? (e.tw||0) : platform === 'instagram' ? (e.ig||0) : (e.tw||0)+(e.ig||0);
+  }
+  function sdlwConvRate(platform) {
+    const d = new Date(); d.setDate(d.getDate() - 7);
+    return getDayConv(dayStr(d), platform);
+  }
+  function sdlwAvgSpend(p) {
+    // avg of 7 days ending last week's same day
+    const vals = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - 7 - i);
+      const dStr = dayStr(d);
+      const v = S[p].logs.filter(l => dayStr(l.date) === dStr).reduce((s,l) => s+(l.spent||0), 0);
+      if (v > 0) vals.push(v);
+    }
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  }
+  function sdlwSubsPerAcc(platform, accounts) {
+    const vals = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - 7 - i);
+      const e = S.subs.find(s => dayStr(s.date) === dayStr(d));
+      const v = e ? (platform==='twitter'?(e.tw||0):(e.ig||0)) : 0;
+      if (v > 0) vals.push(v);
+    }
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length/accounts : null;
+  }
+
+  // meters
+  let html='';
+  [['twitter','𝕏 Twitter','pill-tw','var(--tw)'],['instagram','◎ Instagram','pill-ig','var(--ig)']].forEach(([p,label,cls,clr])=>{
+    const last=getLastLog(p); if(!last) return;
+    const pct=Math.min(100,Math.round(last.balance/pkg*100));
+    const barColor=pct>30?'var(--green)':pct>10?'var(--yellow)':'var(--red)';
+    html+=`<div class="meter-row">
+      <div class="meter-plat"><span class="pill ${cls}">${label}</span></div>
+      <div class="meter-bar-wrap">
+        <div class="meter-bar-lbl"><span>Used: ${fmt(pkg-last.balance)}</span><span>${pct}% remaining</span></div>
+        <div class="meter-bar-track"><div class="meter-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      </div>
+      <div class="meter-stat">
+        <div class="meter-num" style="color:${barColor}">${fmt(last.balance)}</div>
+        <div class="meter-cap">remaining</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('meterContainer').innerHTML = html || '<div class="empty">No data yet — log a report to see balances</div>';
+
+  const todayStr=today();
+  const twTdy=S.twitter.logs.filter(l=>dayStr(l.date)===todayStr);
+  const igTdy=S.instagram.logs.filter(l=>dayStr(l.date)===todayStr);
+  const twSp=twTdy.reduce((s,l)=>s+(l.spent||0),0);
+  const igSp=igTdy.reduce((s,l)=>s+(l.spent||0),0);
+
+  document.getElementById('ov-tw-spent').textContent = twSp > 0 ? fmt(twSp) : '—';
+  document.getElementById('ov-ig-spent').textContent = igSp > 0 ? fmt(igSp) : '—';
+
+  // WoW for spent (today vs same day last week)
+  const twSpLW = sdlwSpend('twitter');
+  const igSpLW = sdlwSpend('instagram');
+  document.getElementById('ov-tw-spent-d').innerHTML = twSp > 0 ? wow(twSp, twSpLW, false, 'convos used') : 'convos used';
+  document.getElementById('ov-ig-spent-d').innerHTML = igSp > 0 ? wow(igSp, igSpLW, false, 'convos used') : 'convos used';
+
+  document.getElementById('ov-tw-rem').textContent   = twL?fmt(twL.balance):'—';
+  document.getElementById('ov-ig-rem').textContent   = igL?fmt(igL.balance):'—';
+  if(twL){const p=Math.round(twL.balance/pkg*100);const c=p>30?'var(--green)':p>10?'var(--yellow)':'var(--red)';document.getElementById('ov-tw-pct').innerHTML=`<span style="color:${c}">${p}% of ${fmt(pkg)}</span>`;}
+  if(igL){const p=Math.round(igL.balance/pkg*100);const c=p>30?'var(--green)':p>10?'var(--yellow)':'var(--red)';document.getElementById('ov-ig-pct').innerHTML=`<span style="color:${c}">${p}% of ${fmt(pkg)}</span>`;}
+
+  // Avg convos/day (7-day) + WoW vs same 7-day window last week
+  const avgTW = getAvgSpend('twitter'), avgIG = getAvgSpend('instagram');
+  const avgTWlw = sdlwAvgSpend('twitter'), avgIGlw = sdlwAvgSpend('instagram');
+  document.getElementById('ov-tw-per-acc').textContent = avgTW ? fmt(avgTW) : '—';
+  document.getElementById('ov-ig-per-acc').textContent = avgIG ? fmt(avgIG) : '—';
+  document.getElementById('ov-tw-per-acc-sub').innerHTML = wow(avgTW||null, avgTWlw, false, '7-day avg');
+  document.getElementById('ov-ig-per-acc-sub').innerHTML = wow(avgIG||null, avgIGlw, false, '7-day avg');
+
+  // Conv rate today + WoW vs same day last week
+  const twConvToday = getDayConv(todayStr, 'twitter');
+  const igConvToday = getDayConv(todayStr, 'instagram');
+  const twConvEl = document.getElementById('ov-tw-conv');
+  const igConvEl = document.getElementById('ov-ig-conv');
+  if (twConvEl) twConvEl.textContent = twConvToday !== null ? twConvToday.toFixed(1)+'%' : '—';
+  if (igConvEl) igConvEl.textContent = igConvToday !== null ? igConvToday.toFixed(1)+'%' : '—';
+  document.getElementById('ov-tw-conv-wow').innerHTML = wow(twConvToday, sdlwConvRate('twitter'), true, 'subs ÷ convos');
+  document.getElementById('ov-ig-conv-wow').innerHTML = wow(igConvToday, sdlwConvRate('instagram'), true, 'subs ÷ convos');
+
+  // Subs per account (7-day avg) + WoW
+  const accTW = S.settings.accountsTW||1;
+  const accIG = S.settings.accountsIG||1;
+  function subsPerAccAvg(platform, accounts) {
+    if (!S.subs) return null;
+    const vals = [];
+    for (let i=6; i>=0; i--) {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const e = S.subs.find(s=>dayStr(s.date)===dayStr(d));
+      const v = e ? (platform==='twitter'?(e.tw||0):(e.ig||0)) : 0;
+      if (v > 0) vals.push(v);
+    }
+    return vals.length ? parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length/accounts).toFixed(1)) : null;
+  }
+  const twSpa = subsPerAccAvg('twitter', accTW);
+  const igSpa = subsPerAccAvg('instagram', accIG);
+  const twSpaLW = sdlwSubsPerAcc('twitter', accTW);
+  const igSpaLW = sdlwSubsPerAcc('instagram', accIG);
+  document.getElementById('ov-tw-subs-per-acc').textContent = twSpa !== null ? twSpa : '—';
+  document.getElementById('ov-ig-subs-per-acc').textContent = igSpa !== null ? igSpa : '—';
+  document.getElementById('ov-tw-subs-per-acc-wow').innerHTML = wow(twSpa, twSpaLW, true, '7-day avg');
+  document.getElementById('ov-ig-subs-per-acc-wow').innerHTML = wow(igSpa, igSpaLW, true, '7-day avg');
+
+  // Subs today + WoW vs same day last week
+  const twSubsToday=S.subs.filter(s=>dayStr(s.date)===todayStr).reduce((a,s)=>a+(s.tw||0),0);
+  const igSubsToday=S.subs.filter(s=>dayStr(s.date)===todayStr).reduce((a,s)=>a+(s.ig||0),0);
+  const twSubsAll=S.subs.reduce((a,s)=>a+(s.tw||0),0);
+  const igSubsAll=S.subs.reduce((a,s)=>a+(s.ig||0),0);
+  document.getElementById('ov-tw-subs').textContent=twSubsToday||'0';
+  document.getElementById('ov-ig-subs').textContent=igSubsToday||'0';
+  document.getElementById('ov-tw-subs-wow').innerHTML = wow(twSubsToday||null, sdlwSubs('twitter'), true, `${fmt(twSubsAll)} all time`);
+  document.getElementById('ov-ig-subs-wow').innerHTML = wow(igSubsToday||null, sdlwSubs('instagram'), true, `${fmt(igSubsAll)} all time`);
+
+  // Totals + WoW
+  const totalToday = twSubsToday + igSubsToday;
+  const totalLW = sdlwSubs('both');
+  document.getElementById('ov-total-subs-today').textContent=fmt(totalToday);
+  document.getElementById('ov-total-subs-all').textContent=fmt(twSubsAll+igSubsAll);
+  document.getElementById('ov-total-subs-today-wow').innerHTML = wow(totalToday||null, totalLW, true, 'both platforms');
+
+  // updated time
+  if(twL||igL){
+    const t=new Date(Math.max(twL?new Date(twL.date):0, igL?new Date(igL.date):0));
+    document.getElementById('overview-updated').textContent='Updated '+t.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  // recent log
+  const all=[...S.twitter.logs.map(l=>({...l,p:'twitter'})),...S.instagram.logs.map(l=>({...l,p:'instagram'}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+  document.getElementById('recentLog').innerHTML=all.length?all.map(l=>{
+    const badge=l.p==='twitter'?'<span class="pill pill-tw">TW</span>':'<span class="pill pill-ig">IG</span>';
+    const sc=(l.spent||0)>0?'color:var(--red)':'color:var(--muted)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:11.5px;">
+      <div style="color:var(--sub);min-width:105px;">${fmtDT(l.date)}</div>
+      <div style="min-width:50px;">${badge}</div>
+      <div style="flex:1;">${fmt(l.balance)} left</div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;${sc}">${l.spent?'−'+fmt(l.spent):'—'}</div>
+    </div>`;
+  }).join('')+'<style>#recentLog>div:last-child{border-bottom:none}</style>':'<div class="empty">Nothing logged yet</div>';
+
+  // chart
+  const tw=getDailySpend('twitter',14), ig=getDailySpend('instagram',14);
+  const ctx=document.getElementById('chartOverview');
+  if(ctx){
+    if(charts.overview){charts.overview.destroy();charts.overview=null;}
+    const o=CD(); o.plugins.legend={display:true,labels:{color:'#8B91A8',font:{family:'Plus Jakarta Sans',size:11},boxWidth:10,padding:16}};
+    charts.overview=new Chart(ctx,{type:'bar',data:{labels:tw.labels,datasets:[
+      {label:'Twitter',data:tw.data,backgroundColor:'rgba(29,155,240,.35)',borderColor:'#1D9BF0',borderWidth:1,borderRadius:5},
+      {label:'Instagram',data:ig.data,backgroundColor:'rgba(225,48,108,.35)',borderColor:'#E1306C',borderWidth:1,borderRadius:5}
+    ]},options:o});
+  }
+}
+
+// ═══════════════════════════════════════
+// PLATFORM
+// ═══════════════════════════════════════
+function renderPlatform(p) {
+  const px=p==='twitter'?'tw':'ig';
+  const capPx=px.charAt(0).toUpperCase()+px.slice(1);
+  const last=getLastLog(p), avg=getAvgSpend(p), pkg=S.settings.defaultPkg;
+  const color=p==='twitter'?'#1D9BF0':'#E1306C';
+  const bg=p==='twitter'?'rgba(29,155,240,.2)':'rgba(225,48,108,.2)';
+  const accounts = p==='twitter' ? (S.settings.accountsTW||1) : (S.settings.accountsIG||1);
+  const cpd = p==='twitter' ? (S.settings.costTW||0.07) : (S.settings.costIG||0.07);
+
+  document.getElementById(`${px}-balance`).textContent=last?fmt(last.balance):'—';
+  document.getElementById(`${px}-avg`).textContent=avg?fmt(avg):'—';
+  if(last) document.getElementById(`${px}-budget-bar`).innerHTML=budgetBar(last.balance,pkg)+budgetStatus(last.balance);
+  if(avg&&last){
+    const d=Math.round(last.balance/avg);
+    document.getElementById(`${px}-days-left`).textContent=d;
+    const c=d>7?'var(--green)':d>3?'var(--yellow)':'var(--red)';
+    document.getElementById(`${px}-days-sub`).innerHTML=`<span style="color:${c}">at ${fmt(avg)}/day avg</span>`;
+  } else document.getElementById(`${px}-days-left`).textContent='—';
+
+  // per-account metrics
+  const perAccDay = avg > 0 ? Math.round(avg / accounts) : null;
+  document.getElementById(`${px}-per-acc-day`).textContent = perAccDay ? fmt(perAccDay) : '—';
+  document.getElementById(`${px}-acc-count`).textContent = accounts;
+
+  // subs per account per day (7-day avg)
+  const subsLast7 = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const dStr = dayStr(d);
+    const e = S.subs ? S.subs.find(s=>dayStr(s.date)===dStr) : null;
+    const dayVal = e ? (p==='twitter'?(e.tw||0):(e.ig||0)) : 0;
+    if (dayVal > 0) subsLast7.push(dayVal);
+  }
+  const avgSubsDay = subsLast7.length ? subsLast7.reduce((a,b)=>a+b,0)/subsLast7.length : 0;
+  const subsPerAcc = avgSubsDay > 0 ? (avgSubsDay / accounts).toFixed(1) : null;
+  document.getElementById(`${px}-subs-per-acc`).textContent = subsPerAcc ? subsPerAcc : '—';
+
+  // cost per sub for this platform
+  const spentAll = S[p].logs.reduce((a,l)=>a+(l.spent||0),0);
+  const subsAll = S.subs ? S.subs.reduce((a,s)=>a+(p==='twitter'?(s.tw||0):(s.ig||0)),0) : 0;
+  const cpsVal = subsAll > 0 ? (spentAll * cpd) / subsAll : null;
+  document.getElementById(`${px}-cps-plat`).textContent = cpsVal ? '$'+cpsVal.toFixed(2) : '—';
+
+  const rows=[...S[p].logs].reverse().slice(0,15);
+  document.getElementById(`${px}Table`).innerHTML=rows.length?rows.map(l=>{
+    const sc=(l.spent||0)>0?'color:var(--red)':'';
+    return `<tr><td>${fmtDate(l.date)}</td><td class="num">${fmt(l.balance)}</td><td class="num" style="${sc}">${l.spent?'−'+fmt(l.spent):'—'}</td><td style="color:var(--sub);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.note||'—'}</td></tr>`;
+  }).join(''):'<tr><td colspan="4" class="empty">No data yet</td></tr>';
+
+  const {labels,data}=getDailySpend(p,14);
+  const ctx=document.getElementById(`chart${capPx}`);
+  if(ctx){
+    if(charts[p]){charts[p].destroy();charts[p]=null;}
+    const o=CD();
+    charts[p]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Convos spent',data,backgroundColor:bg,borderColor:color,borderWidth:1.5,borderRadius:5}]},options:o});
+  }
+}
+
+// ═══════════════════════════════════════
+// REFILL
+// ═══════════════════════════════════════
+function renderRefillHistory() {
+  const all=[...S.twitter.refills.map(r=>({...r,p:'twitter'})),...S.instagram.refills.map(r=>({...r,p:'instagram'}))].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('refillHistory').innerHTML=all.length?all.map(r=>{
+    const badge=r.p==='twitter'?'<span class="pill pill-tw">TW</span>':'<span class="pill pill-ig">IG</span>';
+    return `<div class="refill-row"><div style="color:var(--sub);min-width:90px">${fmtDate(r.date)}</div><div>${badge}</div><div style="flex:1">New balance: <strong>${fmt(r.newBalance)}</strong></div><div style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,196,255,.08);color:var(--of);border:1px solid rgba(0,196,255,.18);">+${fmt(r.amount)}</div></div>`;
+  }).join(''):'<div class="empty">No refills logged</div>';
+}
+
+// ═══════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════
+function renderSettingsForm() {
+  document.getElementById('set-warn').value=S.settings.warnAt;
+  document.getElementById('set-crit').value=S.settings.critAt;
+  document.getElementById('set-default-pkg').value=S.settings.defaultPkg;
+  document.getElementById('set-cost-tw').value=S.settings.costTW||0.07;
+  document.getElementById('set-cost-ig').value=S.settings.costIG||0.07;
+  document.getElementById('set-accounts-tw').value=S.settings.accountsTW||1;
+  document.getElementById('set-accounts-ig').value=S.settings.accountsIG||1;
+  const tzEl = document.getElementById('set-timezone');
+  if (tzEl) tzEl.value = getActiveTZ();
+  const rdEl = document.getElementById('reset-day-date');
+  if (rdEl && !rdEl.value) rdEl.value = todayInputVal();
+}
+
+// ═══════════════════════════════════════
+// OF SUBS
+// ═══════════════════════════════════════
+function initSubsDate() {
+  const el=document.getElementById('subs-input-date');
+  if(el&&!el.value) el.value=todayInputVal();
+}
+
+function logSubs() {
+  initSubsDate();
+  if(!S.subs) S.subs=[];
+  const dateVal=document.getElementById('subs-input-date').value;
+  const tw=parseInt(document.getElementById('subs-tw-input').value)||0;
+  const ig=parseInt(document.getElementById('subs-ig-input').value)||0;
+  const note=document.getElementById('subs-note-input').value.trim();
+  if(tw===0&&ig===0){toast('Error','Enter at least one number','var(--red)');return;}
+  const dStr=dayStr(dateVal+'T12:00:00');
+  const ex=S.subs.findIndex(s=>dayStr(s.date)===dStr);
+  if(ex>=0){
+    S.subs[ex].tw=(S.subs[ex].tw||0)+tw;
+    S.subs[ex].ig=(S.subs[ex].ig||0)+ig;
+    if(note) S.subs[ex].note=note;
+  } else {
+    S.subs.push({date:new Date(dateVal+'T12:00:00').toISOString(),tw,ig,note});
+  }
+  save();renderAll();
+  document.getElementById('subs-tw-input').value='';
+  document.getElementById('subs-ig-input').value='';
+  document.getElementById('subs-note-input').value='';
+  toast('Logged ✓',`TW: +${tw} · IG: +${ig} · Total: +${tw+ig}`,'var(--green)');
+}
+
+function getDayConv(dStr, platform) {
+  if (!S.subs) return null;
+  const e = S.subs.find(s => dayStr(s.date) === dStr);
+  if (!e) return null;
+
+  function spentForPlatform(p) {
+    // Use the pre-calculated spent field stored on each log entry
+    return S[p].logs
+      .filter(l => dayStr(l.date) === dStr)
+      .reduce((sum, l) => sum + (l.spent || 0), 0);
+  }
+
+  let subs = 0, spent = 0;
+  if (platform === 'twitter') {
+    subs = e.tw || 0;
+    spent = spentForPlatform('twitter');
+  } else if (platform === 'instagram') {
+    subs = e.ig || 0;
+    spent = spentForPlatform('instagram');
+  } else {
+    subs = (e.tw || 0) + (e.ig || 0);
+    spent = spentForPlatform('twitter') + spentForPlatform('instagram');
+  }
+
+  if (spent === 0 || subs === 0) return null;
+  return parseFloat(((subs / spent) * 100).toFixed(2));
+}
+
+function renderSubsPage() {
+  if(!S.subs) S.subs=[];
+  initSubsDate();
+  const todayStr=today();
+  const twToday=S.subs.filter(s=>dayStr(s.date)===todayStr).reduce((a,s)=>a+(s.tw||0),0);
+  const igToday=S.subs.filter(s=>dayStr(s.date)===todayStr).reduce((a,s)=>a+(s.ig||0),0);
+  const d7=new Date();d7.setDate(d7.getDate()-6);
+  const wkTotal=S.subs.filter(s=>new Date(s.date)>=d7).reduce((a,s)=>a+(s.tw||0)+(s.ig||0),0);
+  const allTime=S.subs.reduce((a,s)=>a+(s.tw||0)+(s.ig||0),0);
+  document.getElementById('subs-tw-today').textContent=twToday||'0';
+  document.getElementById('subs-ig-today').textContent=igToday||'0';
+  document.getElementById('subs-week-total').textContent=fmt(wkTotal);
+  document.getElementById('subs-alltime').textContent=fmt(allTime);
+
+  // today's conversion
+  const convToday=getDayConv(todayStr,'both');
+  document.getElementById('conv-today').textContent=convToday!==null?convToday.toFixed(1)+'%':'—';
+
+  // 14-day data
+  const days=14;
+  const labels=[],twArr=[],igArr=[],convArr=[];
+  const tz = getActiveTZ();
+  for(let i=days-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const dS=dayStr(d);
+    labels.push(d.toLocaleDateString('en-US',{timeZone:tz,month:'short',day:'numeric'}));
+    const e=S.subs.find(s=>dayStr(s.date)===dS);
+    twArr.push(e?(e.tw||0):0);
+    igArr.push(e?(e.ig||0):0);
+    convArr.push(getDayConv(dS,'both'));
+  }
+
+  // 7-day avg conv
+  const c7=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const c=getDayConv(dayStr(d),'both');if(c!==null)c7.push(c);}
+  const avg7=c7.length?(c7.reduce((a,b)=>a+b,0)/c7.length).toFixed(1):null;
+  document.getElementById('conv-avg7').textContent=avg7?avg7+'%':'—';
+  document.getElementById('conv-avg7-sub').textContent=avg7?`from ${c7.length} days with data`:'not enough data';
+
+  // platform conv avg (all time)
+  function platConvAvg(p){
+    const cs=[];
+    const allD=[...new Set([...S[p].logs.map(l=>dayStr(l.date)),...S.subs.map(s=>dayStr(s.date))])];
+    allD.forEach(dS=>{const c=getDayConv(dS,p);if(c!==null)cs.push(c);});
+    return cs.length?(cs.reduce((a,b)=>a+b,0)/cs.length).toFixed(1):null;
+  }
+  const twCA=platConvAvg('twitter'), igCA=platConvAvg('instagram');
+  document.getElementById('conv-tw-avg').textContent=twCA?twCA+'%':'—';
+  document.getElementById('conv-ig-avg').textContent=igCA?igCA+'%':'—';
+
+  // COST PER SUB — uses stored spent field from balance logs
+  const cpdTW = S.settings.costTW || 0.07;
+  const cpdIG = S.settings.costIG || 0.07;
+  const fmtUSD = v => v !== null ? '$' + v.toFixed(2) : '—';
+
+  // today
+  const twSpentToday = S.twitter.logs.filter(l=>dayStr(l.date)===todayStr).reduce((a,l)=>a+(l.spent||0),0);
+  const igSpentToday = S.instagram.logs.filter(l=>dayStr(l.date)===todayStr).reduce((a,l)=>a+(l.spent||0),0);
+  const totalCostToday = (twSpentToday * cpdTW) + (igSpentToday * cpdIG);
+  const totalSubsToday = twToday + igToday;
+  const cpsTodayVal = totalSubsToday > 0 && totalCostToday > 0 ? totalCostToday / totalSubsToday : null;
+  document.getElementById('cps-today').textContent = fmtUSD(cpsTodayVal);
+  document.getElementById('cps-today-sub').innerHTML = `TW $${cpdTW} · IG $${cpdIG} per convo`;
+
+  // all-time
+  const twConvosAll = S.twitter.logs.reduce((a,l)=>a+(l.spent||0),0);
+  const igConvosAll = S.instagram.logs.reduce((a,l)=>a+(l.spent||0),0);
+  const twSubsAllT = S.subs.reduce((a,s)=>a+(s.tw||0),0);
+  const igSubsAllT = S.subs.reduce((a,s)=>a+(s.ig||0),0);
+  const cpsTW = twSubsAllT > 0 && twConvosAll > 0 ? (twConvosAll * cpdTW) / twSubsAllT : null;
+  const cpsIG = igSubsAllT > 0 && igConvosAll > 0 ? (igConvosAll * cpdIG) / igSubsAllT : null;
+  document.getElementById('cps-tw').textContent = fmtUSD(cpsTW);
+  document.getElementById('cps-ig').textContent = fmtUSD(cpsIG);
+
+  // SUBS CHART
+  const cs=document.getElementById('chartSubs');
+  if(cs){
+    if(charts.subs){charts.subs.destroy();charts.subs=null;}
+    const o=CD();o.plugins.legend={display:true,labels:{color:'#8B91A8',font:{family:'Plus Jakarta Sans',size:11},boxWidth:10,padding:16}};
+    o.scales.x.stacked=true; o.scales.y.stacked=true;
+    charts.subs=new Chart(cs,{type:'bar',data:{labels,datasets:[
+      {label:'Twitter',data:twArr,backgroundColor:'rgba(29,155,240,.5)',borderColor:'#1D9BF0',borderWidth:1,borderRadius:4,stack:'s'},
+      {label:'Instagram',data:igArr,backgroundColor:'rgba(225,48,108,.5)',borderColor:'#E1306C',borderWidth:1,borderRadius:4,stack:'s'}
+    ]},options:o});
+  }
+
+  // CONVERSION CHART
+  const cc=document.getElementById('chartConv');
+  if(cc){
+    if(charts.conv){charts.conv.destroy();charts.conv=null;}
+    const valid=convArr.filter(v=>v!==null);
+    const avgVal=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:null;
+    const avgLine=labels.map(()=>avgVal?parseFloat(avgVal.toFixed(2)):null);
+    const o=CD();
+    o.plugins.legend=false;
+    o.scales.y.ticks={...o.scales.y.ticks,callback:v=>v+'%'};
+    o.plugins.tooltip={...o.plugins.tooltip,callbacks:{label:ctx=>ctx.dataset.label+': '+(ctx.raw!==null?ctx.raw+'%':'no data')}};
+    charts.conv=new Chart(cc,{type:'line',data:{labels,datasets:[
+      {label:'Conversion %',data:convArr,borderColor:'var(--of)',backgroundColor:'rgba(0,196,255,.07)',fill:true,tension:.38,pointRadius:4,pointBackgroundColor:convArr.map(v=>v===null?'transparent':'#00C4FF'),pointBorderColor:'transparent',spanGaps:false},
+      {label:`Avg ${avgVal?avgVal.toFixed(1)+'%':''}`,data:avgLine,borderColor:'rgba(245,166,35,.65)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,tension:0}
+    ]},options:o});
+  }
+
+  // BREAKDOWN
+  const twSA=S.twitter.logs.reduce((a,l)=>a+(l.spent||0),0);
+  const igSA=S.instagram.logs.reduce((a,l)=>a+(l.spent||0),0);
+  const twSubsA=S.subs.reduce((a,s)=>a+(s.tw||0),0);
+  const igSubsA=S.subs.reduce((a,s)=>a+(s.ig||0),0);
+  const twCA2=twSA>0?((twSubsA/twSA)*100).toFixed(2):null;
+  const igCA2=igSA>0?((igSubsA/igSA)*100).toFixed(2):null;
+  function convBar(pct){
+    const p=Math.min(parseFloat(pct)||0,10);
+    const c=p>=2?'var(--green)':p>=0.5?'var(--yellow)':'var(--red)';
+    return `<div class="prog-track" style="height:5px;margin-top:7px;"><div class="prog-fill" style="width:${Math.min(p*10,100)}%;background:${c}"></div></div>`;
+  }
+  document.getElementById('convBreakdown').innerHTML=`
+    <div style="padding:13px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;"><span class="pill pill-tw">𝕏 Twitter</span><span style="font-size:10.5px;color:var(--muted);">${fmt(twSA)} convos → ${fmt(twSubsA)} subs</span></div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--tw)">${twCA2?twCA2+'%':'—'}</div>
+      </div>
+      ${twCA2?convBar(twCA2):''}
+    </div>
+    <div style="padding:13px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;"><span class="pill pill-ig">◎ Instagram</span><span style="font-size:10.5px;color:var(--muted);">${fmt(igSA)} convos → ${fmt(igSubsA)} subs</span></div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--ig)">${igCA2?igCA2+'%':'—'}</div>
+      </div>
+      ${igCA2?convBar(igCA2):''}
+    </div>`;
+
+  // RECENT
+  const recent=[...S.subs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  document.getElementById('subsRecentLog').innerHTML=recent.length?recent.map(s=>{
+    const total=(s.tw||0)+(s.ig||0);
+    const dc=getDayConv(dayStr(s.date),'both');
+    return `<div class="sub-row">
+      <div class="sub-big">+${total}</div>
+      <div style="flex:1;">
+        <div style="font-size:11.5px;margin-bottom:3px;">${fmtDate(s.date)}</div>
+        <div style="font-size:10.5px;color:var(--sub);">
+          ${s.tw?`<span class="pill pill-tw" style="margin-right:4px;">TW +${s.tw}</span>`:''}
+          ${s.ig?`<span class="pill pill-ig">IG +${s.ig}</span>`:''}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        ${dc!==null?`<div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--of);">${dc}%</div><div style="font-size:10px;color:var(--muted);">conversion</div>`:''}
+        ${s.note?`<div style="font-size:10px;color:var(--muted);margin-top:2px;max-width:110px;">${s.note}</div>`:''}
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">No data yet</div>';
+}
+
+// ═══════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════
+let histFilter='all';
+function setHistFilter(f,el){histFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderHistoryPage();}
+
+function renderHistoryPage() {
+  if(!S.subs) S.subs=[];
+  document.getElementById('hist-tw-avg').textContent=fmt(getAvgSpend('twitter'));
+  document.getElementById('hist-ig-avg').textContent=fmt(getAvgSpend('instagram'));
+  document.getElementById('hist-tw-subs-total').textContent=fmt(S.subs.reduce((a,s)=>a+(s.tw||0),0));
+  document.getElementById('hist-ig-subs-total').textContent=fmt(S.subs.reduce((a,s)=>a+(s.ig||0),0));
+  const best=[...S.subs].sort((a,b)=>((b.tw||0)+(b.ig||0))-((a.tw||0)+(a.ig||0)))[0];
+  if(best){document.getElementById('hist-best-day').textContent=`+${(best.tw||0)+(best.ig||0)} subs`;document.getElementById('hist-best-day-sub').textContent=fmtDate(best.date);}
+
+  let rows=[];
+  if(histFilter==='all'||histFilter==='twitter'||histFilter==='instagram'){
+    const ps=histFilter==='all'?['twitter','instagram']:[histFilter];
+    ps.forEach(p=>S[p].logs.forEach(l=>rows.push({date:l.date,type:'convo',platform:p,balance:l.balance,spent:l.spent,subs:null,note:l.note})));
+  }
+  if(histFilter==='all'||histFilter==='subs'){
+    S.subs.forEach(s=>rows.push({date:s.date,type:'subs',platform:'both',balance:null,spent:null,subs:(s.tw||0)+(s.ig||0),tw:s.tw,ig:s.ig,note:s.note}));
+  }
+  rows.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  document.getElementById('historyTableBody').innerHTML=rows.length?rows.map(r=>{
+    const pb=r.platform==='twitter'?'<span class="pill pill-tw">TW</span>':r.platform==='instagram'?'<span class="pill pill-ig">IG</span>':'<span class="pill pill-tw" style="margin-right:3px;">TW</span><span class="pill pill-ig">IG</span>';
+    const tb=r.type==='convo'?'<span class="tbadge tbadge-dlg">DLG</span>':'<span class="tbadge tbadge-sub">SUB</span>';
+    const bal=r.balance!==null?`<span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${fmt(r.balance)}</span>`:'—';
+    const sp=r.spent?`<span style="color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">−${fmt(r.spent)}</span>`:'—';
+    const sb=r.subs!==null?`<span style="color:var(--green);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">+${fmt(r.subs)}</span>`:'—';
+    return `<div class="hist-row">
+      <span style="color:var(--sub);">${fmtDT(r.date)}</span>
+      <span>${tb}</span>
+      <span>${pb}</span>
+      <span style="color:var(--muted);font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.note||'—'}</span>
+      <span style="text-align:right;">${bal}</span>
+      <span style="text-align:right;">${sp}</span>
+      <span style="text-align:right;">${sb}</span>
+    </div>`;
+  }).join(''):'<div class="empty" style="padding:30px 0;">No entries found</div>';
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function toast(title,sub,color='var(--green)'){
+  const el=document.getElementById('toast');
+  el.style.borderLeftColor=color;
+  document.getElementById('toast-title').textContent=title;
+  document.getElementById('toast-sub').textContent=sub;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════════════
+// DEEP ANALYTICS
+// ═══════════════════════════════════════
+let anDays = 30;
+
+function setAnFrame(days, el) {
+  anDays = days;
+  document.querySelectorAll('#pg-analytics .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  ['chartAnSubs','chartAnConv'].forEach(id => { if(charts[id]){charts[id].destroy();charts[id]=null;} });
+  renderAnalyticsPage();
+}
+
+function renderAnalyticsPage() {
+  if (!S.subs) S.subs = [];
+  const now = new Date();
+  const frameLabel = anDays === 0 ? 'All time' : `Last ${anDays} days`;
+  document.getElementById('analytics-sub').textContent = M().name + ' · ' + frameLabel + ' · computed from all logged data';
+
+  // ── Build date range ──
+  const cutoff = anDays === 0 ? new Date(2000,0,1) : (() => { const d = new Date(); d.setDate(d.getDate() - anDays); return d; })();
+
+  // ── Gather per-day data ── store as normalized dayStr keys, sort by actual date
+  const allDatesMap = new Map(); // dayStr -> Date object (noon)
+  [...S.twitter.logs, ...S.instagram.logs].forEach(l => {
+    const ds = dayStr(l.date);
+    if (!allDatesMap.has(ds)) allDatesMap.set(ds, new Date(l.date));
+  });
+  S.subs.forEach(s => {
+    const ds = dayStr(s.date);
+    if (!allDatesMap.has(ds)) allDatesMap.set(ds, new Date(s.date));
+  });
+  const days = [...allDatesMap.entries()]
+    .filter(([,d]) => d >= cutoff)
+    .sort(([,a],[,b]) => a - b);
+
+  function getSpentOnDay(platform, dStr) {
+    return S[platform].logs
+      .filter(l => dayStr(l.date) === dStr)
+      .reduce((sum, l) => sum + (l.spent || 0), 0);
+  }
+
+  let twConvosTotal=0, igConvosTotal=0, twSubsTotal=0, igSubsTotal=0;
+  let twConvosArr=[], igConvosArr=[], totalSubsArr=[], convRateArr=[];
+  const dowTWConvos=[0,0,0,0,0,0,0], dowIGConvos=[0,0,0,0,0,0,0];
+  const dowTWSubs=[0,0,0,0,0,0,0], dowIGSubs=[0,0,0,0,0,0,0];
+  const dowCounts=[0,0,0,0,0,0,0];
+  const dailyTWSubs=[], dailyIGSubs=[], dailyConvRates=[], chartLabels=[];
+
+  const tz = getActiveTZ();
+  days.forEach(([dStr, dateObj]) => {
+    const dow = dateObj.getDay();
+    const tw = getSpentOnDay('twitter', dStr);
+    const ig = getSpentOnDay('instagram', dStr);
+    const se = S.subs.find(s => dayStr(s.date) === dStr);
+    const tws = se ? se.tw||0 : 0;
+    const igs = se ? se.ig||0 : 0;
+    twConvosTotal += tw; igConvosTotal += ig;
+    twSubsTotal += tws; igSubsTotal += igs;
+    twConvosArr.push(tw); igConvosArr.push(ig);
+    totalSubsArr.push(tws+igs);
+    const cr = (tw+ig) > 0 ? ((tws+igs)/(tw+ig)*100) : null;
+    if (cr !== null) convRateArr.push(cr);
+    dowTWConvos[dow]+=tw; dowIGConvos[dow]+=ig;
+    dowTWSubs[dow]+=tws; dowIGSubs[dow]+=igs;
+    if (tw>0||ig>0) dowCounts[dow]++;
+    dailyTWSubs.push(tws); dailyIGSubs.push(igs);
+    dailyConvRates.push(cr);
+    chartLabels.push(dateObj.toLocaleDateString('en-US',{timeZone:tz,month:'short',day:'numeric'}));
+  });
+
+  const totalConvos = twConvosTotal + igConvosTotal;
+  const totalSubs = twSubsTotal + igSubsTotal;
+  const activeDays = days.filter(([dStr]) => {
+    return getSpentOnDay('twitter',dStr)>0 || getSpentOnDay('instagram',dStr)>0;
+  }).length;
+  const numDays = Math.max(activeDays, 1);
+
+  // Core rates
+  const overallCR = totalConvos > 0 ? (totalSubs/totalConvos*100) : 0;
+  const twCR = twConvosTotal > 0 ? (twSubsTotal/twConvosTotal*100) : 0;
+  const igCR = igConvosTotal > 0 ? (igSubsTotal/igConvosTotal*100) : 0;
+  const avgSubsDay = totalSubs / numDays;
+  const avgConvosDay = totalConvos / numDays;
+  const avgTWDay = twConvosTotal / numDays;
+  const avgIGDay = igConvosTotal / numDays;
+
+  // Cost metrics
+  const cpd_tw = S.settings.costTW||0.07, cpd_ig = S.settings.costIG||0.07;
+  const totalSpend = twConvosTotal*cpd_tw + igConvosTotal*cpd_ig;
+  const twSpend = twConvosTotal*cpd_tw, igSpend = igConvosTotal*cpd_ig;
+  const cpsTotal = totalSubs > 0 ? totalSpend/totalSubs : null;
+  const cpsTW = twSubsTotal > 0 ? twSpend/twSubsTotal : null;
+  const cpsIG = igSubsTotal > 0 ? igSpend/igSubsTotal : null;
+  const spendPerDay = totalSpend / numDays;
+
+  // Trends: compare first half vs second half
+  const half = Math.floor(days.length/2);
+  const firstHalfSubs = totalSubsArr.slice(0,half).reduce((a,b)=>a+b,0);
+  const secondHalfSubs = totalSubsArr.slice(half).reduce((a,b)=>a+b,0);
+  const subsTrend = half > 0 && firstHalfSubs > 0 ? ((secondHalfSubs-firstHalfSubs)/firstHalfSubs*100).toFixed(0) : null;
+
+  const firstHalfCR = convRateArr.slice(0,Math.floor(convRateArr.length/2));
+  const secondHalfCR = convRateArr.slice(Math.floor(convRateArr.length/2));
+  const avgCR1 = firstHalfCR.length ? firstHalfCR.reduce((a,b)=>a+b,0)/firstHalfCR.length : 0;
+  const avgCR2 = secondHalfCR.length ? secondHalfCR.reduce((a,b)=>a+b,0)/secondHalfCR.length : 0;
+  const crTrend = avgCR1 > 0 ? ((avgCR2-avgCR1)/avgCR1*100).toFixed(0) : null;
+
+  // Best/worst days
+  const daySubPairs = days.map(([dStr, dateObj], i) => ({ dateObj, dStr, subs: totalSubsArr[i], cr: dailyConvRates[i] }))
+    .filter(x => x.subs > 0 || x.cr !== null);
+  const sortedBySubs = [...daySubPairs].sort((a,b)=>b.subs-a.subs);
+  const sortedByCR   = [...daySubPairs].filter(x=>x.cr!==null).sort((a,b)=>b.cr-a.cr);
+
+  // Streak: consecutive days with subs logged
+  let curStreak=0, maxStreak=0, tmp=0;
+  totalSubsArr.forEach(s => { if(s>0){tmp++;maxStreak=Math.max(maxStreak,tmp);}else{tmp=0;} });
+  const lastN = [...totalSubsArr].reverse();
+  for(const s of lastN){ if(s>0) curStreak++; else break; }
+
+  // Refill analysis
+  const twRefills = (S.twitter.refills||[]).filter(r => new Date(r.date) >= cutoff);
+  const igRefills = (S.instagram.refills||[]).filter(r => new Date(r.date) >= cutoff);
+  const twRefillTotal = twRefills.reduce((a,r)=>a+(r.amount||0),0);
+  const igRefillTotal = igRefills.reduce((a,r)=>a+(r.amount||0),0);
+
+  // ── TOP KPIs ──
+  function kpi(label, val, sub, color='var(--of)', accent=null) {
+    return `<div class="an-kpi">
+      <div class="an-kpi-accent" style="background:linear-gradient(90deg,${accent||color},transparent);"></div>
+      <div class="an-kpi-label">${label}</div>
+      <div class="an-kpi-val" style="color:${color};">${val}</div>
+      <div class="an-kpi-sub">${sub}</div>
+    </div>`;
+  }
+  function trendTag(val, invert=false) {
+    if (val===null||val===undefined) return '';
+    const n = parseFloat(val); const up = invert ? n<=0 : n>=0;
+    return `<span style="font-size:10px;color:${up?'var(--green)':'var(--red)'};">${n>=0?'↑':'↓'}${Math.abs(n)}%</span>`;
+  }
+
+  document.getElementById('an-top-kpis').innerHTML =
+    kpi('Total Subs', fmt(totalSubs), `${frameLabel} · ${trendTag(subsTrend)} vs prior period`, 'var(--green)') +
+    kpi('Conv Rate', overallCR.toFixed(2)+'%', `${trendTag(crTrend)} vs prior period`, 'var(--of)') +
+    kpi('Total Spend', '$'+totalSpend.toFixed(2), `$${spendPerDay.toFixed(2)}/day avg`, 'var(--purple)') +
+    kpi('Cost per Sub', cpsTotal ? '$'+cpsTotal.toFixed(2) : '—', 'blended TW+IG', 'var(--purple)') +
+    kpi('Active Days', activeDays, `${(activeDays/(anDays||activeDays)*100).toFixed(0)}% of period`, 'var(--tw)') +
+    kpi('Subs / Day', avgSubsDay.toFixed(1), `${avgConvosDay.toFixed(0)} convos/day avg`, 'var(--green)');
+
+  // ── EFFICIENCY ──
+  function statRow(label, val, sub='', color='var(--text)') {
+    return `<div class="an-stat-row">
+      <span class="an-stat-label">${label}</span>
+      <div style="text-align:right;">
+        <span class="an-stat-val" style="color:${color};">${val}</span>
+        ${sub?`<span class="an-stat-delta" style="color:var(--muted);">${sub}</span>`:''}
+      </div>
+    </div>`;
+  }
+  const accTW = S.settings.accountsTW||1, accIG = S.settings.accountsIG||1;
+  document.getElementById('an-efficiency').innerHTML =
+    statRow('Conv rate — Twitter',   twCR.toFixed(2)+'%',  '', 'var(--tw)') +
+    statRow('Conv rate — Instagram', igCR.toFixed(2)+'%',  '', 'var(--ig)') +
+    statRow('Cost per sub — TW',     cpsTW ? '$'+cpsTW.toFixed(2) : '—', '', 'var(--purple)') +
+    statRow('Cost per sub — IG',     cpsIG ? '$'+cpsIG.toFixed(2) : '—', '', 'var(--purple)') +
+    statRow('Convos per sub — TW',   twSubsTotal>0?(twConvosTotal/twSubsTotal).toFixed(1):'—', 'convos needed') +
+    statRow('Convos per sub — IG',   igSubsTotal>0?(igConvosTotal/igSubsTotal).toFixed(1):'—', 'convos needed') +
+    statRow('Avg convos/acc/day TW',  fmt(Math.round(avgTWDay/accTW)), `across ${accTW} acc`) +
+    statRow('Avg convos/acc/day IG',  fmt(Math.round(avgIGDay/accIG)), `across ${accIG} acc`) +
+    statRow('Subs/acc/day TW',       (twSubsTotal/numDays/accTW).toFixed(2), 'avg') +
+    statRow('Subs/acc/day IG',       (igSubsTotal/numDays/accIG).toFixed(2), 'avg');
+
+  // ── VELOCITY ──
+  const recentDays = Math.min(7, days.length);
+  const recentSubs = totalSubsArr.slice(-recentDays).reduce((a,b)=>a+b,0);
+  const recentAvg  = recentDays > 0 ? recentSubs/recentDays : 0;
+  const peakDay    = sortedBySubs[0];
+  const maxCR      = sortedByCR[0];
+  const medianSubs = [...totalSubsArr].sort((a,b)=>a-b)[Math.floor(totalSubsArr.length/2)] || 0;
+  const stdDev     = totalSubsArr.length > 1 ? Math.sqrt(totalSubsArr.map(x=>(x-avgSubsDay)**2).reduce((a,b)=>a+b,0)/totalSubsArr.length).toFixed(1) : '—';
+  const zeroSubDays = totalSubsArr.filter(s=>s===0).length;
+  const pctActiveSubs = totalSubsArr.length > 0 ? (100 - zeroSubDays/totalSubsArr.length*100).toFixed(0) : 0;
+
+  // Projected month end
+  const today = new Date();
+  const daysLeftMonth = new Date(today.getFullYear(),today.getMonth()+1,0).getDate() - today.getDate();
+  const monthStart2 = new Date(today.getFullYear(),today.getMonth(),1);
+  let mtdSubs=0;
+  for(let d=new Date(monthStart2);d<=today;d.setDate(d.getDate()+1)){
+    const e=S.subs.find(s=>dayStr(s.date)===dayStr(d));
+    if(e) mtdSubs+=(e.tw||0)+(e.ig||0);
+  }
+  const projectedMonth = Math.round(mtdSubs + recentAvg * daysLeftMonth);
+
+  document.getElementById('an-velocity').innerHTML =
+    statRow('7-day avg subs/day',   recentAvg.toFixed(1), trendTag(subsTrend), 'var(--green)') +
+    statRow('Projected month-end',  fmt(projectedMonth), 'at 7d rate', 'var(--of)') +
+    statRow('Peak subs day',        peakDay ? `${fmt(peakDay.subs)} subs` : '—', peakDay ? fmtDate(peakDay.dateObj.toISOString()) : '') +
+    statRow('Best conv rate day',   maxCR ? maxCR.cr.toFixed(2)+'%' : '—', maxCR ? fmtDate(maxCR.dateObj.toISOString()) : '') +
+    statRow('Median subs/day',      medianSubs, 'middle value') +
+    statRow('Std dev subs',         stdDev, 'consistency measure') +
+    statRow('Days with subs logged',pctActiveSubs+'%', `${totalSubsArr.length-zeroSubDays} of ${totalSubsArr.length} days`) +
+    statRow('Subs trend (halves)',  subsTrend ? (parseFloat(subsTrend)>0?'📈 ':'📉 ')+subsTrend+'%' : '—', 'first vs second half') +
+    statRow('Conv rate trend',      crTrend ? (parseFloat(crTrend)>0?'📈 ':'📉 ')+crTrend+'%' : '—', 'first vs second half') +
+    statRow('TW share of subs',     totalSubs>0?(twSubsTotal/totalSubs*100).toFixed(0)+'%':'—', `vs IG ${totalSubs>0?(igSubsTotal/totalSubs*100).toFixed(0):'—'}%`);
+
+  // ── HEAD TO HEAD ──
+  function h2hRow(metric, twVal, igVal, twNum, igNum) {
+    const total = (twNum||0) + (igNum||0);
+    const twPct = total > 0 ? (twNum/total*100) : 50;
+    const igPct = total > 0 ? (igNum/total*100) : 50;
+    const twWins = twNum >= igNum;
+    return `<div class="h2h-row">
+      <div style="text-align:right;">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:${twWins?'var(--tw)':'var(--sub)'};">${twVal}</span>
+        <div class="h2h-bar-l" style="width:${Math.min(100,twPct)}%;max-width:100%;margin-top:3px;opacity:${twWins?1:0.4};"></div>
+      </div>
+      <div class="h2h-metric">${metric}</div>
+      <div>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:${!twWins?'var(--ig)':'var(--sub)'};">${igVal}</span>
+        <div class="h2h-bar-r" style="width:${Math.min(100,igPct)}%;max-width:100%;margin-top:3px;opacity:${!twWins?1:0.4};"></div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('an-h2h').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 80px 1fr;gap:8px;margin-bottom:10px;font-size:9px;color:var(--muted);letter-spacing:1.5px;">
+      <div style="text-align:right;color:var(--tw);">𝕏 TWITTER</div>
+      <div></div>
+      <div style="color:var(--ig);">◎ INSTAGRAM</div>
+    </div>` +
+    h2hRow('Total Subs', fmt(twSubsTotal), fmt(igSubsTotal), twSubsTotal, igSubsTotal) +
+    h2hRow('Convos Spent', fmt(twConvosTotal), fmt(igConvosTotal), twConvosTotal, igConvosTotal) +
+    h2hRow('Conv Rate', twCR.toFixed(2)+'%', igCR.toFixed(2)+'%', twCR, igCR) +
+    h2hRow('Cost/Sub', cpsTW?'$'+cpsTW.toFixed(2):'—', cpsIG?'$'+cpsIG.toFixed(2):'—', cpsTW?1/cpsTW:0, cpsIG?1/cpsIG:0) +
+    h2hRow('Avg Subs/Day', (twSubsTotal/numDays).toFixed(1), (igSubsTotal/numDays).toFixed(1), twSubsTotal, igSubsTotal) +
+    h2hRow('Convos/Acc/Day', fmt(Math.round(avgTWDay/accTW)), fmt(Math.round(avgIGDay/accIG)), avgTWDay/accTW, avgIGDay/accIG) +
+    h2hRow('Spend', '$'+twSpend.toFixed(2), '$'+igSpend.toFixed(2), twSpend, igSpend) +
+    h2hRow('Refills', fmt(twRefillTotal), fmt(igRefillTotal), twRefillTotal, igRefillTotal);
+
+  // ── CHARTS ──
+  const CD2 = () => CD();
+  const subsCtx = document.getElementById('chartAnSubs');
+  if (subsCtx) {
+    if (charts.chartAnSubs) { charts.chartAnSubs.destroy(); }
+    const o = CD2();
+    charts.chartAnSubs = new Chart(subsCtx, { type:'bar', data:{ labels:chartLabels,
+      datasets:[
+        { label:'TW Subs', data:dailyTWSubs, backgroundColor:'rgba(29,155,240,.5)', borderColor:'#1D9BF0', borderWidth:1, borderRadius:3 },
+        { label:'IG Subs', data:dailyIGSubs, backgroundColor:'rgba(225,48,108,.5)', borderColor:'#E1306C', borderWidth:1, borderRadius:3 }
+      ]}, options:{ ...o, plugins:{ ...o.plugins, legend:{ display:true, labels:{ color:'#8B91A8', font:{family:'Plus Jakarta Sans',size:10}, boxWidth:10 }}} }
+    });
+  }
+  const convCtx = document.getElementById('chartAnConv');
+  if (convCtx) {
+    if (charts.chartAnConv) { charts.chartAnConv.destroy(); }
+    const o2 = CD2();
+    charts.chartAnConv = new Chart(convCtx, { type:'line', data:{ labels:chartLabels,
+      datasets:[{ label:'Conv %', data:dailyConvRates, borderColor:'#00C4FF', backgroundColor:'rgba(0,196,255,.06)',
+        fill:true, tension:0.4, pointRadius:2, borderWidth:2, spanGaps:true }]},
+      options:{ ...o2, plugins:{ ...o2.plugins, legend:{display:false}},
+        scales:{ ...o2.scales, y:{ ...o2.scales?.y, ticks:{ ...o2.scales?.y?.ticks, callback:v=>v+'%' }}}
+    }});
+  }
+
+  // ── DAY OF WEEK ──
+  const DOW_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dowSubsArr = dowTWSubs.map((tw,i) => tw + dowIGSubs[i]);
+  const maxDowSubs = Math.max(...dowSubsArr, 1);
+  const dowConvRates = dowSubsArr.map((subs,i) => {
+    const convos = dowTWConvos[i]+dowIGConvos[i];
+    return convos > 0 ? (subs/convos*100).toFixed(1) : null;
+  });
+  document.getElementById('an-dow').innerHTML = DOW_NAMES.map((name,i) => {
+    const subs = dowSubsArr[i];
+    const pct = Math.round(subs/maxDowSubs*100);
+    const cr = dowConvRates[i];
+    const barColor = pct > 70 ? 'var(--green)' : pct > 30 ? 'var(--of)' : 'var(--border2)';
+    return `<div class="dow-row">
+      <span class="dow-label">${name}</span>
+      <div class="dow-bar-wrap">
+        <div class="dow-bar" style="width:${pct}%;background:${barColor};"></div>
+        <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:9px;color:rgba(255,255,255,.5);">${subs} subs${cr?' · '+cr+'%':''}</span>
+      </div>
+      <span class="dow-val">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  // ── BEST / WORST ──
+  const top3 = sortedBySubs.slice(0,3);
+  const bot3 = sortedBySubs.filter(x=>x.subs>0).slice(-3).reverse();
+  const topCR3 = sortedByCR.slice(0,3);
+  document.getElementById('an-bestworst').innerHTML =
+    `<div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Best days by subs</div>` +
+    (top3.length ? top3.map((x,i)=>`<div class="an-stat-row">
+      <span class="an-stat-label">${['🥇','🥈','🥉'][i]} ${fmtDate(x.dateObj.toISOString())}</span>
+      <span class="an-stat-val" style="color:var(--green);">${fmt(x.subs)} subs${x.cr?` · ${x.cr.toFixed(1)}%`:''}</span>
+    </div>`).join('') : '<div class="empty" style="padding:8px 0;">No data</div>') +
+    `<div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:12px 0 8px;">Best conv rate days</div>` +
+    (topCR3.length ? topCR3.map((x,i)=>`<div class="an-stat-row">
+      <span class="an-stat-label">${['🥇','🥈','🥉'][i]} ${fmtDate(x.dateObj.toISOString())}</span>
+      <span class="an-stat-val" style="color:var(--of);">${x.cr.toFixed(2)}% · ${x.subs} subs</span>
+    </div>`).join('') : '<div class="empty" style="padding:8px 0;">No data</div>');
+
+  // ── REFILLS ──
+  const allRefills = [...(S.twitter.refills||[]).map(r=>({...r,p:'TW'})), ...(S.instagram.refills||[]).map(r=>({...r,p:'IG'}))]
+    .filter(r=>new Date(r.date)>=cutoff).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('an-refills').innerHTML =
+    statRow('TW refills (period)', fmt(twRefills.length)+' refills', fmt(twRefillTotal)+' convos') +
+    statRow('IG refills (period)', fmt(igRefills.length)+' refills', fmt(igRefillTotal)+' convos') +
+    statRow('Avg refill size TW', twRefills.length ? fmt(Math.round(twRefillTotal/twRefills.length)) : '—', 'convos') +
+    statRow('Avg refill size IG', igRefills.length ? fmt(Math.round(igRefillTotal/igRefills.length)) : '—', 'convos') +
+    `<div style="margin-top:12px;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Recent refills</div>` +
+    (allRefills.length ? allRefills.slice(0,5).map(r=>`<div class="an-stat-row">
+      <span class="an-stat-label"><span class="${r.p==='TW'?'pill pill-tw':'pill pill-ig'}" style="font-size:9px;">${r.p}</span> ${fmtDate(r.date)}</span>
+      <span class="an-stat-val">+${fmt(r.amount)}</span>
+    </div>`).join('') : '<div class="empty" style="padding:8px 0;">No refills in period</div>');
+
+  // ── COSTS ──
+  document.getElementById('an-costs').innerHTML =
+    statRow('Total spend (period)',  '$'+totalSpend.toFixed(2), frameLabel, 'var(--purple)') +
+    statRow('Spend per day',         '$'+spendPerDay.toFixed(2), 'avg', 'var(--purple)') +
+    statRow('TW total spend',        '$'+twSpend.toFixed(2), `${(twSpend/totalSpend*100||0).toFixed(0)}% of total`) +
+    statRow('IG total spend',        '$'+igSpend.toFixed(2), `${(igSpend/totalSpend*100||0).toFixed(0)}% of total`) +
+    statRow('Cost per sub (total)',  cpsTotal ? '$'+cpsTotal.toFixed(2) : '—', 'blended', 'var(--purple)') +
+    statRow('Cost per sub (TW)',     cpsTW ? '$'+cpsTW.toFixed(2) : '—', '', 'var(--purple)') +
+    statRow('Cost per sub (IG)',     cpsIG ? '$'+cpsIG.toFixed(2) : '—', '', 'var(--purple)') +
+    statRow('Revenue break-even',   cpsTotal ? '> $'+cpsTotal.toFixed(2)+'/sub' : '—', 'min sub price') +
+    statRow('Spend per active day',  activeDays > 0 ? '$'+(totalSpend/activeDays).toFixed(2) : '—', '') +
+    statRow('TW cost per convo',     '$'+(cpd_tw).toFixed(3), '') +
+    statRow('IG cost per convo',     '$'+(cpd_ig).toFixed(3), '');
+
+  // ── STREAKS ──
+  document.getElementById('an-streaks').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      ${[
+        ['Current streak', curStreak+' days', curStreak>0?'var(--green)':'var(--muted)'],
+        ['Longest streak', maxStreak+' days', 'var(--of)'],
+        ['Active day rate', pctActiveSubs+'%', 'var(--tw)'],
+        ['Total logged days', fmt(totalSubsArr.length), 'var(--sub)'],
+      ].map(([l,v,c])=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">${l}</div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:22px;color:${c};">${v}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ═══════════════════════════════════════
+// MODELS
+// ═══════════════════════════════════════
+let _pickedColor = '#00C4FF';
+
+function pickColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  _pickedColor = el.dataset.color;
+}
+
+function renderModelSwitcher() {
+  const el = document.getElementById('model-switcher');
+  if (!el) return;
+  el.innerHTML = APP.models.map(m => `
+    <button class="model-btn ${m.id === APP.activeModelId ? 'active' : ''}" onclick="switchModel(${m.id})">
+      <div class="model-dot" style="background:${m.color};box-shadow:0 0 6px ${m.color}44;"></div>
+      <span class="model-name-text">${m.name}</span>
+      ${m.id === APP.activeModelId ? '<span style="font-size:9px;color:var(--of);letter-spacing:1px;">ACTIVE</span>' : ''}
+    </button>`).join('');
+}
+
+function switchModel(id) {
+  APP.activeModelId = id;
+  save();
+  // destroy all charts so they re-render for new model
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+  renderAll();
+  // re-activate current page render
+  const activePage = document.querySelector('.page.active');
+  if (activePage) renderPage(activePage.id.replace('pg-', ''));
+  toast('Switched', 'Now viewing: ' + M().name, M().color);
+}
+
+function addModel() {
+  const name = document.getElementById('new-model-name').value.trim();
+  if (!name) { toast('Error', 'Enter a model name', 'var(--red)'); return; }
+  const id = Date.now();
+  APP.models.push({ id, name, color: _pickedColor, ...MODEL_DEFAULT() });
+  save();
+  document.getElementById('new-model-name').value = '';
+  renderModelsPage();
+  renderModelSwitcher();
+  toast('Model added ✓', name + ' profile created', _pickedColor);
+}
+
+function deleteModel(id) {
+  if (APP.models.length <= 1) { toast('Error', 'Need at least one model', 'var(--red)'); return; }
+  const m = APP.models.find(m => m.id === id);
+  if (!confirm(`Delete ${m?.name}? All their data will be lost.`)) return;
+  APP.models = APP.models.filter(m => m.id !== id);
+  if (APP.activeModelId === id) APP.activeModelId = APP.models[0].id;
+  save(); renderModelsPage(); renderModelSwitcher(); renderAll();
+}
+
+function renameModel(id) {
+  const m = APP.models.find(m => m.id === id);
+  const name = prompt('Rename model:', m?.name || '');
+  if (!name?.trim()) return;
+  m.name = name.trim();
+  save(); renderModelsPage(); renderModelSwitcher();
+}
+
+function renderModelsPage() {
+  const list = document.getElementById('models-list');
+  if (!list) return;
+  list.innerHTML = APP.models.map(m => {
+    const totalSubs = (m.subs||[]).reduce((a,s) => a+(s.tw||0)+(s.ig||0), 0);
+    const totalLogs = (m.twitter?.logs?.length||0) + (m.instagram?.logs?.length||0);
+    const isActive = m.id === APP.activeModelId;
+    return `<div class="model-row">
+      <div class="model-row-dot" style="background:${m.color};box-shadow:0 0 8px ${m.color}55;"></div>
+      <div style="flex:1;">
+        <div class="model-row-name">${m.name} ${isActive ? '<span style="font-size:9px;color:var(--of);letter-spacing:1px;margin-left:6px;">ACTIVE</span>' : ''}</div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:2px;">${totalLogs} log entries · ${fmt(totalSubs)} total subs</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        ${!isActive ? `<button class="btn-sm" onclick="switchModel(${m.id})" style="color:var(--of);border-color:rgba(0,196,255,.3);">Switch</button>` : ''}
+        <button class="btn-sm" onclick="renameModel(${m.id})">Rename</button>
+        ${APP.models.length > 1 ? `<button class="btn-sm danger" onclick="deleteModel(${m.id})">Delete</button>` : ''}
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">No models</div>';
+}
+
+// ═══════════════════════════════════════
+// GOALS
+// ═══════════════════════════════════════
+function saveGoals() {
+  if (!M().goals) M().goals = {};
+  M().goals.monthSubs   = parseInt(document.getElementById('goal-month-subs').value)    || null;
+  M().goals.monthSubsTW = parseInt(document.getElementById('goal-month-subs-tw').value) || null;
+  M().goals.monthSubsIG = parseInt(document.getElementById('goal-month-subs-ig').value) || null;
+  save();
+  renderGoalsPage();
+  renderOvGoalBar();
+  toast('Goals saved ✓', 'Targets updated for ' + M().name, 'var(--green)');
+}
+
+function renderGoalsPage() {
+  if (!M().goals) M().goals = {};
+  const g = M().goals;
+
+  document.getElementById('goals-model-sub').textContent = M().name + ' · ' + new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('goal-month-subs').value    = g.monthSubs   || '';
+  document.getElementById('goal-month-subs-tw').value = g.monthSubsTW || '';
+  document.getElementById('goal-month-subs-ig').value = g.monthSubsIG || '';
+
+  // Count subs this month
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayOfMonth = now.getDate();
+  const dayPct = Math.round(dayOfMonth / daysInMonth * 100);
+
+  let twSubs = 0, igSubs = 0;
+  for (let d = new Date(monthStart); d <= now; d.setDate(d.getDate() + 1)) {
+    const e = (M().subs || []).find(s => dayStr(s.date) === dayStr(d));
+    if (e) { twSubs += e.tw || 0; igSubs += e.ig || 0; }
+  }
+  const totalSubs = twSubs + igSubs;
+
+  const hasAny = g.monthSubs || g.monthSubsTW || g.monthSubsIG;
+  if (!hasAny) {
+    document.getElementById('goals-main-bar').innerHTML = '<div class="empty" style="padding:40px 0;">Set monthly targets below to see your progress</div>';
+    return;
+  }
+
+  function buildBar(label, color, current, target, monthName, daysLeft) {
+    if (!target) return '';
+    const pct    = Math.min(100, Math.round(current / target * 100));
+    const ahead  = pct >= dayPct;
+    const done   = pct >= 100;
+    const barClr = done ? '#0FD688' : ahead ? '#0FD688' : pct >= dayPct - 15 ? '#F5A623' : '#F04747';
+    const needed = daysLeft > 0 ? Math.ceil(Math.max(0, target - current) / daysLeft) : 0;
+    const pace   = done ? '🎯 Goal reached!' : ahead ? `⚡ ${needed}/day to finish` : `${needed}/day needed`;
+    return `
+      <div style="margin-bottom:${target===g.monthSubs&&(g.monthSubsTW||g.monthSubsIG)?'20px':'0'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--sub);font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">${label}</span>
+            <span style="font-size:11px;color:${barClr};font-family:'JetBrains Mono',monospace;font-weight:700;">${current} <span style="color:var(--muted);font-weight:400;">/ ${target}</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:10px;color:var(--muted);">${pace}</span>
+            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;color:${barClr};">${pct}%</span>
+          </div>
+        </div>
+        <div style="position:relative;height:12px;background:var(--s3);border-radius:6px;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;height:100%;width:${dayPct}%;background:rgba(255,255,255,.04);border-right:1px dashed rgba(255,255,255,.1);"></div>
+          <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:${barClr};border-radius:6px;box-shadow:0 0 12px ${barClr}44;transition:width 1.2s cubic-bezier(.16,1,.3,1);"></div>
+        </div>
+      </div>`;
+  }
+
+  const monthName = now.toLocaleString('en-US', { month: 'long' });
+  const daysLeft  = daysInMonth - dayOfMonth;
+
+  document.getElementById('goals-main-bar').innerHTML =
+    `<div style="font-size:10px;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:16px;">${monthName} · ${dayOfMonth} of ${daysInMonth} days</div>` +
+    buildBar('Total', 'var(--of)', totalSubs, g.monthSubs, monthName, daysLeft) +
+    (g.monthSubsTW || g.monthSubsIG ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-top:${g.monthSubs?'4px':'0'};">
+      <div>${buildBar('𝕏 Twitter', '#1D9BF0', twSubs, g.monthSubsTW, monthName, daysLeft)}</div>
+      <div>${buildBar('◎ Instagram', '#E1306C', igSubs, g.monthSubsIG, monthName, daysLeft)}</div>
+    </div>` : '');
+}
+
+
+// ═══════════════════════════════════════
+// WEEKLY REPORT
+// ═══════════════════════════════════════
+function renderReportPage() {
+  // Set default date to last Sunday
+  const el = document.getElementById('report-week-end');
+  if (!el.value) {
+    const d = new Date();
+    const day = d.getDay();
+    d.setDate(d.getDate() - (day === 0 ? 0 : day));
+    el.value = d.toISOString().split('T')[0];
+  }
+  // Quick week buttons: last 8 weeks
+  const qw = document.getElementById('report-quick-weeks');
+  qw.innerHTML = '';
+  for (let w = 0; w < 8; w++) {
+    const end = new Date();
+    const day = end.getDay();
+    end.setDate(end.getDate() - (day === 0 ? 0 : day) - w * 7);
+    const start = new Date(end); start.setDate(start.getDate() - 6);
+    const endISO = end.toISOString().split('T')[0];
+    const lbl = w === 0 ? 'This week' : w === 1 ? 'Last week' :
+      `${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+    qw.innerHTML += `<button class="filter-btn" onclick="quickWeek('${endISO}',this)" style="font-size:10.5px;">${lbl}</button>`;
+  }
+}
+
+function quickWeek(endDate, el) {
+  document.getElementById('report-week-end').value = endDate;
+  document.querySelectorAll('#report-quick-weeks .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  generateReport();
+}
+
+function generateReport() {
+  if (!S.subs) S.subs = [];
+  const endVal = document.getElementById('report-week-end').value;
+  if (!endVal) return;
+
+  const endDate = new Date(endVal + 'T23:59:59');
+  const startDate = new Date(endDate); startDate.setDate(startDate.getDate() - 6); startDate.setHours(0,0,0,0);
+  const prevEnd = new Date(startDate); prevEnd.setDate(prevEnd.getDate() - 1); prevEnd.setHours(23,59,59);
+  const prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - 6); prevStart.setHours(0,0,0,0);
+
+  function weekData(start, end) {
+    const days = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+
+    let twConvos = 0, igConvos = 0, twSubs = 0, igSubs = 0;
+    let twConvDays = 0, igConvDays = 0;
+
+    days.forEach(d => {
+      const dStr = dayStr(d);
+      // tw convos
+      const twDL = S.twitter.logs.filter(l => dayStr(l.date) === dStr);
+      const twPD = new Date(d); twPD.setDate(twPD.getDate()-1);
+      const twPrev = [...S.twitter.logs].reverse().find(l => dayStr(l.date) === dayStr(twPD));
+      if (twDL.length && twPrev) { twConvos += Math.max(twPrev.balance - twDL[twDL.length-1].balance, 0); twConvDays++; }
+      // ig convos
+      const igDL = S.instagram.logs.filter(l => dayStr(l.date) === dStr);
+      const igPD = new Date(d); igPD.setDate(igPD.getDate()-1);
+      const igPrev = [...S.instagram.logs].reverse().find(l => dayStr(l.date) === dayStr(igPD));
+      if (igDL.length && igPrev) { igConvos += Math.max(igPrev.balance - igDL[igDL.length-1].balance, 0); igConvDays++; }
+      // subs
+      const se = S.subs.find(s => dayStr(s.date) === dStr);
+      if (se) { twSubs += se.tw||0; igSubs += se.ig||0; }
+    });
+
+    const totalConvos = twConvos + igConvos;
+    const totalSubs = twSubs + igSubs;
+    const convRate = totalConvos > 0 ? ((totalSubs / totalConvos) * 100).toFixed(2) : null;
+    const twConvRate = twConvos > 0 ? ((twSubs / twConvos) * 100).toFixed(2) : null;
+    const igConvRate = igConvos > 0 ? ((igSubs / igConvos) * 100).toFixed(2) : null;
+    const cpsTW = twSubs > 0 ? ((twConvos * (S.settings.costTW||0.07)) / twSubs).toFixed(2) : null;
+    const cpsIG = igSubs > 0 ? ((igConvos * (S.settings.costIG||0.07)) / igSubs).toFixed(2) : null;
+    const avgTWDay = twConvDays > 0 ? Math.round(twConvos / twConvDays) : 0;
+    const avgIGDay = igConvDays > 0 ? Math.round(igConvos / igConvDays) : 0;
+    const accTW = S.settings.accountsTW||1, accIG = S.settings.accountsIG||1;
+    return { twConvos, igConvos, totalConvos, twSubs, igSubs, totalSubs, convRate, twConvRate, igConvRate, cpsTW, cpsIG, avgTWDay, avgIGDay, accTW, accIG };
+  }
+
+  const curr = weekData(startDate, endDate);
+  const prev = weekData(prevStart, prevEnd);
+
+  function delta(a, b) {
+    if (!b || b == 0) return null;
+    const d = ((a - b) / b * 100).toFixed(0);
+    return { val: d, up: d >= 0 };
+  }
+  function dTag(a, b, invert = false) {
+    const d = delta(a, b);
+    if (!d) return '';
+    const up = invert ? !d.up : d.up;
+    const color = up ? 'var(--green)' : 'var(--red)';
+    const arrow = d.up ? '↑' : '↓';
+    return ` <span style="font-size:10px;color:${color}">${arrow}${Math.abs(d.val)}%</span>`;
+  }
+
+  // ── KPI Cards ──
+  const kpiData = [
+    { label: 'Total Convos', val: fmt(curr.totalConvos), delta: delta(curr.totalConvos, prev.totalConvos), invert: false },
+    { label: 'Total Subs', val: fmt(curr.totalSubs), delta: delta(curr.totalSubs, prev.totalSubs), invert: false, color: 'var(--green)' },
+    { label: 'Avg Conv Rate', val: curr.convRate ? curr.convRate+'%' : '—', delta: delta(parseFloat(curr.convRate), parseFloat(prev.convRate)), invert: false, color: 'var(--of)' },
+    { label: 'Cost per Sub', val: curr.cpsTW||curr.cpsIG ? '$'+((parseFloat(curr.cpsTW||0)+parseFloat(curr.cpsIG||0))/(curr.cpsTW&&curr.cpsIG?2:1)).toFixed(2) : '—', delta: null, color: 'var(--purple)' },
+  ];
+  document.getElementById('report-kpis').innerHTML = kpiData.map((k,i) => {
+    const colors = ['tw','ig','of','pu'];
+    const dEl = k.delta ? (() => { const up = k.invert ? !k.delta.up : k.delta.up; return `<div class="sc-delta ${up?'up':'dn'}">${up?'↑':'↓'} ${Math.abs(k.delta.val)}% vs prev week</div>`; })() : '<div class="sc-delta">—</div>';
+    return `<div class="sc ${colors[i]}"><div class="sc-label">${k.label}</div><div class="sc-val" style="${k.color?'color:'+k.color:''}">${k.val}</div>${dEl}</div>`;
+  }).join('');
+
+  // ── Breakdown cards ──
+  const wLabel = `${startDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${endDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+  document.getElementById('report-breakdown').innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="pill pill-tw">𝕏 Twitter</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;font-size:12px;">
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">CONVOS SPENT</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${fmt(curr.twConvos)}${dTag(curr.twConvos,prev.twConvos)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">NEW SUBS</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--green);">${fmt(curr.twSubs)}${dTag(curr.twSubs,prev.twSubs)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">CONV RATE</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--of);">${curr.twConvRate?curr.twConvRate+'%':'—'}${dTag(parseFloat(curr.twConvRate),parseFloat(prev.twConvRate))}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">COST PER SUB</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--purple);">${curr.cpsTW?'$'+curr.cpsTW:'—'}${dTag(parseFloat(curr.cpsTW),parseFloat(prev.cpsTW),true)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">AVG/DAY</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${fmt(curr.avgTWDay)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">PER ACCOUNT/DAY</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${curr.avgTWDay?fmt(Math.round(curr.avgTWDay/curr.accTW)):'—'}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="pill pill-ig">◎ Instagram</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;font-size:12px;">
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">CONVOS SPENT</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${fmt(curr.igConvos)}${dTag(curr.igConvos,prev.igConvos)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">NEW SUBS</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--green);">${fmt(curr.igSubs)}${dTag(curr.igSubs,prev.igSubs)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">CONV RATE</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--of);">${curr.igConvRate?curr.igConvRate+'%':'—'}${dTag(parseFloat(curr.igConvRate),parseFloat(prev.igConvRate))}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">COST PER SUB</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;color:var(--purple);">${curr.cpsIG?'$'+curr.cpsIG:'—'}${dTag(parseFloat(curr.cpsIG),parseFloat(prev.cpsIG),true)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">AVG/DAY</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${fmt(curr.avgIGDay)}</div></div>
+        <div><div style="color:var(--muted);font-size:9.5px;margin-bottom:3px;">PER ACCOUNT/DAY</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;">${curr.avgIGDay?fmt(Math.round(curr.avgIGDay/curr.accIG)):'—'}</div></div>
+      </div>
+    </div>`;
+
+  // ── Events this week ──
+  const weekEvents = (S.events||[]).filter(ev => {
+    const d = new Date(ev.date); return d >= startDate && d <= endDate;
+  });
+
+  // ── Generate text ──
+  const fmt2 = document.getElementById('report-format').value;
+  const report = buildReportText(fmt2, wLabel, curr, prev, weekEvents);
+  document.getElementById('report-text-box').textContent = report;
+  document.getElementById('report-empty').style.display = 'none';
+  document.getElementById('report-output').style.display = 'block';
+  window._lastReport = report;
+  window._lastReportData = { wLabel, c: curr, p: prev, events: weekEvents };
+}
+
+function buildReportText(format, wLabel, c, p, events) {
+  const acc = S.settings.accountsTW||1;
+  const accIG = S.settings.accountsIG||1;
+  function pctChange(a, b) {
+    if (!b || b == 0) return '';
+    const d = ((a-b)/b*100).toFixed(0);
+    return ` (${d >= 0 ? '+' : ''}${d}% vs prev)`;
+  }
+  const evLines = events.length ? events.map(e => `  • [${e.cat.toUpperCase()}] ${e.label}${e.note ? ' — ' + e.note : ''}`).join('\n') : '  None this week';
+
+  if (format === 'plain') {
+    return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THE NINTH ROOM — WEEKLY REPORT
+${wLabel}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OVERVIEW
+  Total Convos Spent : ${fmt(c.totalConvos)}${pctChange(c.totalConvos, p.totalConvos)}
+  Total New Subs     : ${fmt(c.totalSubs)}${pctChange(c.totalSubs, p.totalSubs)}
+  Overall Conv Rate  : ${c.convRate ? c.convRate + '%' : '—'}${pctChange(parseFloat(c.convRate), parseFloat(p.convRate))}
+
+TWITTER  (${acc} account${acc>1?'s':''})
+  Convos Spent       : ${fmt(c.twConvos)}${pctChange(c.twConvos, p.twConvos)}
+  New Subs           : ${fmt(c.twSubs)}${pctChange(c.twSubs, p.twSubs)}
+  Conversion Rate    : ${c.twConvRate ? c.twConvRate + '%' : '—'}
+  Cost per Sub       : ${c.cpsTW ? '$' + c.cpsTW : '—'}
+  Avg Convos/Day     : ${fmt(c.avgTWDay)}  (${fmt(Math.round(c.avgTWDay/(acc||1)))} per account)
+
+INSTAGRAM  (${accIG} account${accIG>1?'s':''})
+  Convos Spent       : ${fmt(c.igConvos)}${pctChange(c.igConvos, p.igConvos)}
+  New Subs           : ${fmt(c.igSubs)}${pctChange(c.igSubs, p.igSubs)}
+  Conversion Rate    : ${c.igConvRate ? c.igConvRate + '%' : '—'}
+  Cost per Sub       : ${c.cpsIG ? '$' + c.cpsIG : '—'}
+  Avg Convos/Day     : ${fmt(c.avgIGDay)}  (${fmt(Math.round(c.avgIGDay/(accIG||1)))} per account)
+
+EVENTS THIS WEEK
+${evLines}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Generated by The Ninth Room HQ`;
+  }
+
+  if (format === 'markdown') {
+    return `# 📊 The Ninth Room — Weekly Report
+**${wLabel}**
+
+---
+
+## Overview
+| Metric | This Week | vs Prev |
+|--------|-----------|---------|
+| Total Convos | **${fmt(c.totalConvos)}** | ${pctChange(c.totalConvos, p.totalConvos)||'—'} |
+| Total Subs | **${fmt(c.totalSubs)}** | ${pctChange(c.totalSubs, p.totalSubs)||'—'} |
+| Conv Rate | **${c.convRate ? c.convRate+'%' : '—'}** | ${pctChange(parseFloat(c.convRate), parseFloat(p.convRate))||'—'} |
+
+## 𝕏 Twitter (${acc} account${acc>1?'s':''})
+| Metric | Value |
+|--------|-------|
+| Convos Spent | **${fmt(c.twConvos)}** ${pctChange(c.twConvos, p.twConvos)} |
+| New Subs | **${fmt(c.twSubs)}** |
+| Conv Rate | **${c.twConvRate ? c.twConvRate+'%' : '—'}** |
+| Cost per Sub | **${c.cpsTW ? '$'+c.cpsTW : '—'}** |
+| Avg Convos/Day | **${fmt(c.avgTWDay)}** (${fmt(Math.round(c.avgTWDay/(acc||1)))} per acc) |
+
+## ◎ Instagram (${accIG} account${accIG>1?'s':''})
+| Metric | Value |
+|--------|-------|
+| Convos Spent | **${fmt(c.igConvos)}** ${pctChange(c.igConvos, p.igConvos)} |
+| New Subs | **${fmt(c.igSubs)}** |
+| Conv Rate | **${c.igConvRate ? c.igConvRate+'%' : '—'}** |
+| Cost per Sub | **${c.cpsIG ? '$'+c.cpsIG : '—'}** |
+| Avg Convos/Day | **${fmt(c.avgIGDay)}** (${fmt(Math.round(c.avgIGDay/(accIG||1)))} per acc) |
+
+## Events This Week
+${events.length ? events.map(e => `- **[${e.cat}]** ${e.label}${e.note ? ' — ' + e.note : ''}`).join('\n') : '_None this week_'}
+
+---
+_Generated by The Ninth Room HQ_`;
+  }
+
+  // Slack format
+  return `:bar_chart: *The Ninth Room — Weekly Report*
+*${wLabel}*
+
+*Overview*
+> Convos: *${fmt(c.totalConvos)}*${pctChange(c.totalConvos, p.totalConvos)}  |  Subs: *${fmt(c.totalSubs)}*${pctChange(c.totalSubs, p.totalSubs)}  |  Conv: *${c.convRate ? c.convRate+'%' : '—'}*
+
+:bird: *Twitter* (${acc} acc)
+> Convos: \`${fmt(c.twConvos)}\` · Subs: \`${fmt(c.twSubs)}\` · Conv: \`${c.twConvRate||'—'}%\` · CPS: \`${c.cpsTW?'$'+c.cpsTW:'—'}\` · Avg/day: \`${fmt(c.avgTWDay)}\`
+
+:camera: *Instagram* (${accIG} acc)
+> Convos: \`${fmt(c.igConvos)}\` · Subs: \`${fmt(c.igSubs)}\` · Conv: \`${c.igConvRate||'—'}%\` · CPS: \`${c.cpsIG?'$'+c.cpsIG:'—'}\` · Avg/day: \`${fmt(c.avgIGDay)}\`
+
+${events.length ? ':calendar: *Events this week*\n' + events.map(e => `> :small_blue_diamond: *[${e.cat}]* ${e.label}${e.note?' — '+e.note:''}`).join('\n') : ''}
+
+_Generated by The Ninth Room HQ_`;
+}
+
+function copyReport() {
+  if (!window._lastReport) return;
+  navigator.clipboard.writeText(window._lastReport).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied ✓';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'rgba(15,214,136,.35)';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2200);
+    toast('Copied ✓', 'Report text copied to clipboard', 'var(--green)');
+  });
+}
+
+function downloadPDF() {
+  if (!window._lastReportData) { toast('Error', 'Generate a report first', 'var(--red)'); return; }
+  const btn = document.getElementById('pdf-btn');
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW = 210, PH = 297;
+  const ML = 18, MR = 18, MT = 18;
+  let y = MT;
+
+  // ── colour palette ──
+  const C = {
+    bg:      [6,   7,   9],
+    s1:      [12,  13,  18],
+    s2:      [17,  19,  24],
+    border:  [28,  31,  43],
+    border2: [38,  42,  56],
+    tw:      [29,  155, 240],
+    ig:      [225, 48,  108],
+    of:      [0,   196, 255],
+    green:   [15,  214, 136],
+    yellow:  [245, 166, 35],
+    purple:  [155, 109, 255],
+    text:    [232, 235, 244],
+    sub:     [139, 145, 168],
+    muted:   [69,  74,  98],
+    white:   [255, 255, 255],
+    red:     [240, 71,  71],
+  };
+
+  function setFill(col)   { doc.setFillColor(...col); }
+  function setDraw(col)   { doc.setDrawColor(...col); }
+  function setTxt(col)    { doc.setTextColor(...col); }
+  function setFont(sz, style='normal', family='helvetica') { doc.setFont(family, style); doc.setFontSize(sz); }
+
+  // ── full page background ──
+  setFill(C.bg); doc.rect(0, 0, PW, PH, 'F');
+
+  // ── ambient glow blobs ──
+  doc.saveGraphicsState();
+  doc.setGState(new doc.GState({ opacity: 0.04 }));
+  setFill(C.of); doc.ellipse(PW * 0.8, -10, 55, 35, 'F');
+  setFill(C.ig); doc.ellipse(PW * 0.1, PH + 10, 40, 25, 'F');
+  doc.restoreGraphicsState();
+
+  // ══ HEADER BAND ══
+  const HH = 28;
+  setFill(C.s1); doc.rect(0, 0, PW, HH, 'F');
+  // top accent line gradient sim (two rects)
+  setFill(C.of);  doc.rect(0, 0, PW * 0.5, 1.2, 'F');
+  setFill(C.purple); doc.rect(PW * 0.5, 0, PW * 0.5, 1.2, 'F');
+  // logo box
+  setFill(C.s2); setDraw(C.border2);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ML, 7, 13, 13, 2, 2, 'FD');
+  setTxt(C.of); setFont(8, 'bold');
+  doc.text('IX', ML + 6.5, 15.5, { align: 'center' });
+  // title
+  setTxt(C.text); setFont(13, 'bold');
+  doc.text('The Ninth Room', ML + 17, 13);
+  setTxt(C.sub); setFont(7);
+  doc.text('OF TRAFFIC OPS  ·  WEEKLY REPORT', ML + 17, 18.5);
+  // date badge (right)
+  const d = window._lastReportData;
+  const dateTxt = d.wLabel || '';
+  setTxt(C.of); setFont(7.5, 'bold');
+  doc.text(dateTxt, PW - MR, 15.5, { align: 'right' });
+
+  y = HH + 10;
+
+  // ══ SECTION HELPER ══
+  function sectionTitle(title, col = C.of) {
+    setTxt(col); setFont(7, 'bold');
+    doc.text(title.toUpperCase(), ML, y);
+    doc.setLineWidth(0.2); setDraw(col);
+    doc.setLineDashPattern([1, 1.5], 0);
+    doc.line(ML + doc.getTextWidth(title.toUpperCase()) + 2, y - 0.8, PW - MR, y - 0.8);
+    doc.setLineDashPattern([], 0);
+    y += 5;
+  }
+
+  // ══ KPI ROW ══
+  sectionTitle('Weekly Overview');
+  const kpis = [
+    { label: 'Total Convos',  val: fmt(d.c.totalConvos), delta: d.c.totalConvos && d.p.totalConvos ? ((d.c.totalConvos-d.p.totalConvos)/d.p.totalConvos*100).toFixed(0) : null, col: C.tw },
+    { label: 'New Subs',      val: fmt(d.c.totalSubs),   delta: d.c.totalSubs && d.p.totalSubs ? ((d.c.totalSubs-d.p.totalSubs)/d.p.totalSubs*100).toFixed(0) : null, col: C.green },
+    { label: 'Conv Rate',     val: d.c.convRate ? d.c.convRate+'%' : '—', delta: d.c.convRate && d.p.convRate ? ((d.c.convRate-d.p.convRate)/d.p.convRate*100).toFixed(0) : null, col: C.of },
+    { label: 'Avg CPS',       val: d.c.cpsTW||d.c.cpsIG ? '$'+((parseFloat(d.c.cpsTW||0)+parseFloat(d.c.cpsIG||0))/(d.c.cpsTW&&d.c.cpsIG?2:1)).toFixed(2) : '—', delta: null, col: C.purple },
+  ];
+  const KW = (PW - ML - MR - 9) / 4;
+  kpis.forEach((k, i) => {
+    const x = ML + i * (KW + 3);
+    // card bg
+    setFill(C.s1); setDraw(C.border); doc.setLineWidth(0.25);
+    doc.roundedRect(x, y, KW, 22, 2, 2, 'FD');
+    // top accent
+    setFill(k.col); doc.rect(x, y, KW, 1, 'F');
+    // label
+    setTxt(C.muted); setFont(6);
+    doc.text(k.label.toUpperCase(), x + KW/2, y + 6, { align: 'center' });
+    // value
+    setTxt(k.col); setFont(11, 'bold');
+    doc.text(k.val, x + KW/2, y + 14, { align: 'center' });
+    // delta
+    if (k.delta !== null) {
+      const up = parseFloat(k.delta) >= 0;
+      setTxt(up ? C.green : C.red); setFont(6);
+      doc.text(`${up?'↑':'↓'}${Math.abs(k.delta)}% vs prev`, x + KW/2, y + 19.5, { align: 'center' });
+    }
+  });
+  y += 28;
+
+  // ══ PLATFORM TABLES ══
+  function platformBlock(label, pill_col, convos, subs, convRate, cps, avgDay, accounts, prevConvos, prevSubs) {
+    if (y > PH - 60) { doc.addPage(); setFill(C.bg); doc.rect(0,0,PW,PH,'F'); y = MT; }
+
+    sectionTitle(label + '  ·  ' + accounts + ' account' + (accounts>1?'s':''), pill_col);
+
+    const cols = ['CONVOS SPENT','NEW SUBS','CONV RATE','COST/SUB','AVG/DAY','PER ACC/DAY'];
+    const vals = [
+      fmt(convos),
+      fmt(subs),
+      convRate ? convRate+'%' : '—',
+      cps ? '$'+cps : '—',
+      fmt(avgDay),
+      avgDay ? fmt(Math.round(avgDay / (accounts||1))) : '—',
+    ];
+    const deltas = [
+      prevConvos ? ((convos-prevConvos)/prevConvos*100).toFixed(0) : null,
+      prevSubs   ? ((subs-prevSubs)/prevSubs*100).toFixed(0)       : null,
+      null, null, null, null,
+    ];
+    const vcols = [C.text, C.green, C.of, C.purple, C.text, C.text];
+    const CW = (PW - ML - MR - 5 * 2) / 6;
+
+    cols.forEach((col, i) => {
+      const x = ML + i * (CW + 2);
+      setFill(C.s2); setDraw(C.border); doc.setLineWidth(0.2);
+      doc.roundedRect(x, y, CW, 18, 1.5, 1.5, 'FD');
+      setTxt(C.muted); setFont(5.5);
+      doc.text(col, x + CW/2, y + 5, { align: 'center' });
+      setTxt(vcols[i]); setFont(8.5, 'bold');
+      doc.text(vals[i], x + CW/2, y + 12, { align: 'center' });
+      if (deltas[i] !== null) {
+        const up = parseFloat(deltas[i]) >= 0;
+        setTxt(up ? C.green : C.red); setFont(5.5);
+        doc.text(`${up?'↑':'↓'}${Math.abs(deltas[i])}%`, x + CW/2, y + 16.5, { align: 'center' });
+      }
+    });
+    y += 24;
+  }
+
+  platformBlock(
+    'Twitter', C.tw,
+    d.c.twConvos, d.c.twSubs, d.c.twConvRate, d.c.cpsTW, d.c.avgTWDay, d.c.accTW,
+    d.p.twConvos, d.p.twSubs
+  );
+  y += 2;
+  platformBlock(
+    'Instagram', C.ig,
+    d.c.igConvos, d.c.igSubs, d.c.igConvRate, d.c.cpsIG, d.c.avgIGDay, d.c.accIG,
+    d.p.igConvos, d.p.igSubs
+  );
+  y += 4;
+
+  // ══ EVENTS ══
+  if (d.events && d.events.length) {
+    if (y > PH - 50) { doc.addPage(); setFill(C.bg); doc.rect(0,0,PW,PH,'F'); y = MT; }
+    sectionTitle('Events This Week');
+    const CAT_C = { strategy: C.of, content: C.green, pricing: C.yellow, account: C.tw, other: C.sub };
+    d.events.forEach(ev => {
+      if (y > PH - 20) { doc.addPage(); setFill(C.bg); doc.rect(0,0,PW,PH,'F'); y = MT; }
+      const col = CAT_C[ev.cat] || C.sub;
+      // dot
+      setFill(col); doc.circle(ML + 1.5, y - 0.5, 1.5, 'F');
+      // cat badge
+      setFill(C.s2); setDraw(col); doc.setLineWidth(0.2);
+      doc.roundedRect(ML + 5, y - 3.5, 16, 5, 1, 1, 'FD');
+      setTxt(col); setFont(5.5, 'bold');
+      doc.text(ev.cat.toUpperCase(), ML + 13, y + 0.2, { align: 'center' });
+      // label
+      setTxt(C.text); setFont(7.5, 'bold');
+      doc.text(ev.label, ML + 24, y + 0.2);
+      // date + note
+      setTxt(C.sub); setFont(6);
+      const noteTxt = ev.note ? '  ·  ' + ev.note : '';
+      doc.text(fmtDate(ev.date) + noteTxt, ML + 24, y + 5);
+      y += 10;
+    });
+    y += 2;
+  }
+
+  // ══ FOOTER ══
+  const pageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    setFill(C.s1); doc.rect(0, PH - 10, PW, 10, 'F');
+    setFill(C.of); doc.rect(0, PH - 10, PW * 0.4, 0.6, 'F');
+    setFill(C.purple); doc.rect(PW * 0.4, PH - 10, PW * 0.6, 0.6, 'F');
+    setTxt(C.muted); setFont(6);
+    doc.text('The Ninth Room HQ  ·  Confidential', ML, PH - 4);
+    doc.text(`Page ${p} of ${pageCount}`, PW - MR, PH - 4, { align: 'right' });
+  }
+
+  const fname = `ninth-room-report-${(d.wLabel||'').replace(/[^a-z0-9]/gi,'-').toLowerCase()}.pdf`;
+  doc.save(fname);
+
+  btn.textContent = '↓ PDF';
+  btn.disabled = false;
+  toast('PDF downloaded ✓', fname, 'var(--of)');
+}
+
+// ═══════════════════════════════════════
+// TIMELINE
+// ═══════════════════════════════════════
+let tlDays = 7;
+let tlSeries = { tw: true, ig: true, subs: true, conv: true };
+
+const CAT_COLORS = {
+  strategy: '#00C4FF',
+  content:  '#0FD688',
+  pricing:  '#F5A623',
+  account:  '#1D9BF0',
+  other:    '#8B91A8'
+};
+
+function setTLFrame(days, el) {
+  tlDays = days;
+  document.querySelectorAll('#pg-timeline .filter-btn').forEach(b => {
+    if (['7D','14D','30D','60D','90D','6M','1Y'].includes(b.textContent)) b.classList.remove('active');
+  });
+  el.classList.add('active');
+  if (charts.timeline) { charts.timeline.destroy(); charts.timeline = null; }
+  renderTimelineChart();
+}
+
+function toggleTLSeries(key, el) {
+  tlSeries[key] = !tlSeries[key];
+  el.classList.toggle('active', tlSeries[key]);
+  if (charts.timeline) { charts.timeline.destroy(); charts.timeline = null; }
+  renderTimelineChart();
+}
+
+function addTimelineEvent() {
+  if (!S.events) S.events = [];
+  const dateVal = document.getElementById('tl-event-date').value;
+  const label   = document.getElementById('tl-event-label').value.trim();
+  const cat     = document.getElementById('tl-event-category').value;
+  const plat    = document.getElementById('tl-event-platform').value;
+  const note    = document.getElementById('tl-event-note').value.trim();
+  if (!dateVal || !label) { toast('Error', 'Date and label are required', 'var(--red)'); return; }
+  S.events.push({
+    id: Date.now(),
+    date: new Date(dateVal + 'T12:00:00').toISOString(),
+    label, cat, plat, note
+  });
+  save();
+  document.getElementById('tl-event-label').value = '';
+  document.getElementById('tl-event-note').value = '';
+  renderTimelinePage();
+  toast('Event added ✓', label, CAT_COLORS[cat] || 'var(--of)');
+}
+
+function deleteEvent(id) {
+  S.events = S.events.filter(e => e.id !== id);
+  save();
+  renderTimelinePage();
+}
+
+function initTLDate() {
+  const el = document.getElementById('tl-event-date');
+  if (el && !el.value) el.value = new Date().toISOString().split('T')[0];
+}
+
+function renderTimelinePage() {
+  if (!S.events) S.events = [];
+  initTLDate();
+  renderTimelineChart();
+  renderEventList();
+}
+
+function renderTimelineChart() {
+  if (!S.events) S.events = [];
+  const labels = [], twData = [], igData = [], subsData = [], convData = [];
+
+  for (let i = tlDays - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dStr = dayStr(d);
+    labels.push(fmtDate(d.toISOString()));
+
+    // tw convos spent
+    const twDL = S.twitter.logs.filter(l => dayStr(l.date) === dStr);
+    const twPD = new Date(d); twPD.setDate(twPD.getDate() - 1);
+    const twPrev = [...S.twitter.logs].reverse().find(l => dayStr(l.date) === dayStr(twPD));
+    twData.push(twDL.length && twPrev ? Math.max(twPrev.balance - twDL[twDL.length-1].balance, 0) : 0);
+
+    // ig convos spent
+    const igDL = S.instagram.logs.filter(l => dayStr(l.date) === dStr);
+    const igPD = new Date(d); igPD.setDate(igPD.getDate() - 1);
+    const igPrev = [...S.instagram.logs].reverse().find(l => dayStr(l.date) === dayStr(igPD));
+    igData.push(igDL.length && igPrev ? Math.max(igPrev.balance - igDL[igDL.length-1].balance, 0) : 0);
+
+    // subs
+    const se = S.subs ? S.subs.find(s => dayStr(s.date) === dStr) : null;
+    subsData.push(se ? (se.tw||0) + (se.ig||0) : 0);
+
+    // conv %
+    convData.push(getDayConv(dStr, 'both'));
+  }
+
+  // Build event annotation lines
+  const annotations = {};
+  S.events.forEach((ev, idx) => {
+    const evDate = new Date(ev.date);
+    // find closest label index
+    const evStr = fmtDate(ev.date);
+    const labelIdx = labels.indexOf(evStr);
+    if (labelIdx === -1) return;
+    annotations[`ev_${idx}`] = {
+      type: 'line',
+      xMin: labelIdx,
+      xMax: labelIdx,
+      borderColor: CAT_COLORS[ev.cat] || '#8B91A8',
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      label: {
+        display: true,
+        content: ev.label,
+        position: 'start',
+        backgroundColor: 'rgba(13,15,21,.92)',
+        color: CAT_COLORS[ev.cat] || '#8B91A8',
+        font: { family: 'Plus Jakarta Sans', weight: '700', size: 10 },
+        padding: { x: 7, y: 4 },
+        borderRadius: 5,
+        borderColor: CAT_COLORS[ev.cat] || '#8B91A8',
+        borderWidth: 1,
+        yAdjust: -8,
+        rotation: -90,
+      }
+    };
+  });
+
+  const ctx = document.getElementById('chartTimeline');
+  if (!ctx) return;
+
+  const datasets = [];
+  if (tlSeries.tw) datasets.push({
+    label: 'TW Convos', data: twData, type: 'bar',
+    backgroundColor: 'rgba(29,155,240,.4)', borderColor: '#1D9BF0', borderWidth: 1, borderRadius: 4,
+    yAxisID: 'y', order: 3
+  });
+  if (tlSeries.ig) datasets.push({
+    label: 'IG Convos', data: igData, type: 'bar',
+    backgroundColor: 'rgba(225,48,108,.4)', borderColor: '#E1306C', borderWidth: 1, borderRadius: 4,
+    yAxisID: 'y', order: 4
+  });
+  if (tlSeries.subs) datasets.push({
+    label: 'New Subs', data: subsData, type: 'line',
+    borderColor: '#0FD688', backgroundColor: 'rgba(15,214,136,.08)',
+    fill: false, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#0FD688',
+    borderWidth: 2, yAxisID: 'y', order: 2
+  });
+  if (tlSeries.conv) datasets.push({
+    label: 'Conv %', data: convData, type: 'line',
+    borderColor: '#00C4FF', backgroundColor: 'rgba(0,196,255,.04)',
+    fill: false, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#00C4FF',
+    borderWidth: 2, borderDash: [], yAxisID: 'y2', order: 1,
+    spanGaps: false
+  });
+
+  const o = CD();
+  o.plugins.legend = {
+    display: true,
+    labels: { color: '#8B91A8', font: { family: 'Plus Jakarta Sans', size: 11 }, boxWidth: 10, padding: 16 }
+  };
+  o.plugins.tooltip = {
+    ...o.plugins.tooltip,
+    callbacks: {
+      label: ctx => {
+        const v = ctx.raw;
+        if (v === null || v === undefined) return null;
+        if (ctx.dataset.label === 'Conv %') return `Conv %: ${v}%`;
+        return `${ctx.dataset.label}: ${fmt(v)}`;
+      }
+    }
+  };
+  // annotation plugin workaround — draw event lines as custom plugin
+  o.scales.y = {
+    ...o.scales.y, position: 'left', title: { display: true, text: 'Convos / Subs', color: '#454A62', font: { family: 'JetBrains Mono', size: 10 } }
+  };
+  o.scales.y2 = {
+    type: 'linear', position: 'right', grid: { drawOnChartArea: false },
+    ticks: { color: '#454A62', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' },
+    title: { display: true, text: 'Conv %', color: '#454A62', font: { family: 'JetBrains Mono', size: 10 } }
+  };
+
+  // Custom plugin to draw vertical event lines
+  const eventLinesPlugin = {
+    id: 'eventLines',
+    afterDraw(chart) {
+      if (!S.events || !S.events.length) return;
+      const { ctx: c, scales: { x, y } } = chart;
+      const chartArea = chart.chartArea;
+      S.events.forEach(ev => {
+        const evStr = fmtDate(ev.date);
+        const idx = labels.indexOf(evStr);
+        if (idx === -1) return;
+        const xPos = x.getPixelForValue(idx);
+        const color = CAT_COLORS[ev.cat] || '#8B91A8';
+        c.save();
+        c.beginPath();
+        c.moveTo(xPos, chartArea.top);
+        c.lineTo(xPos, chartArea.bottom);
+        c.strokeStyle = color;
+        c.lineWidth = 1.5;
+        c.setLineDash([4, 3]);
+        c.globalAlpha = 0.7;
+        c.stroke();
+        // label at top
+        c.globalAlpha = 1;
+        c.setLineDash([]);
+        c.font = "bold 10px 'Plus Jakarta Sans', sans-serif";
+        c.fillStyle = color;
+        c.textAlign = 'left';
+        const maxX = chartArea.right - 6;
+        const labelX = Math.min(xPos + 4, maxX - c.measureText(ev.label).width);
+        c.fillText(ev.label.length > 18 ? ev.label.slice(0, 17) + '…' : ev.label, labelX, chartArea.top + 14);
+        c.restore();
+      });
+    }
+  };
+
+  charts.timeline = new Chart(ctx, { data: { labels, datasets }, options: o, plugins: [eventLinesPlugin] });
+}
+
+function renderEventList() {
+  if (!S.events) S.events = [];
+  const sorted = [...S.events].sort((a, b) => new Date(b.date) - new Date(a.date));
+  document.getElementById('tl-event-count').textContent = `(${sorted.length})`;
+  document.getElementById('tlEventList').innerHTML = sorted.length ? sorted.map(ev => {
+    const catLabel = ev.cat.charAt(0).toUpperCase() + ev.cat.slice(1);
+    const platBadge = ev.plat === 'twitter' ? '<span class="pill pill-tw" style="font-size:9px;">TW</span>' :
+                      ev.plat === 'instagram' ? '<span class="pill pill-ig" style="font-size:9px;">IG</span>' :
+                      '<span class="pill pill-of" style="font-size:9px;">All</span>';
+    return `<div class="ev-row">
+      <div class="ev-dot ev-cat-${ev.cat}"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="ev-label">${ev.label} <span class="cat-pill cat-${ev.cat}">${catLabel}</span></div>
+        <div class="ev-meta">${fmtDate(ev.date)} · ${platBadge} ${ev.note ? '· ' + ev.note : ''}</div>
+      </div>
+      <button class="ev-del" onclick="deleteEvent(${ev.id})" title="Delete">✕</button>
+    </div>`;
+  }).join('') : '<div class="empty">No events yet — add your first marker</div>';
+}
+
+
+// ═══════════════════════════════════════
+// PIN LOCK
+// ═══════════════════════════════════════
+let pinEntry = '';
+
+function pinInput(digit) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += digit;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    setTimeout(checkPin, 120);
+  }
+}
+
+function pinDelete() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+  clearPinError();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.classList.toggle('filled', i < pinEntry.length);
+    dot.classList.remove('error');
+  }
+}
+
+function checkPin() {
+  const correct = APP.globalSettings.pin || '1234';
+  if (pinEntry === correct) {
+    const screen = document.getElementById('pin-screen');
+    screen.style.transition = 'opacity .35s ease';
+    screen.style.opacity = '0';
+    setTimeout(() => screen.style.display = 'none', 350);
+  } else {
+    // wrong PIN
+    for (let i = 0; i < 4; i++) document.getElementById('dot-' + i).classList.add('error');
+    const dotsEl = document.getElementById('pin-dots');
+    dotsEl.classList.add('shake');
+    setTimeout(() => dotsEl.classList.remove('shake'), 400);
+    const err = document.getElementById('pin-error');
+    err.textContent = 'Incorrect PIN — try again';
+    err.style.opacity = '1';
+    setTimeout(() => {
+      pinEntry = '';
+      updatePinDots();
+      clearPinError();
+    }, 900);
+  }
+}
+
+function clearPinError() {
+  document.getElementById('pin-error').style.opacity = '0';
+}
+
+function changePin() {
+  const p1 = document.getElementById('set-pin').value;
+  const p2 = document.getElementById('set-pin-confirm').value;
+  if (p1.length !== 4 || !/^\d{4}$/.test(p1)) { toast('Error', 'PIN must be exactly 4 digits', 'var(--red)'); return; }
+  if (p1 !== p2) { toast('Error', 'PINs do not match', 'var(--red)'); return; }
+  APP.globalSettings.pin = p1;
+  save();
+  document.getElementById('set-pin').value = '';
+  document.getElementById('set-pin-confirm').value = '';
+  toast('PIN updated ✓', 'New PIN saved successfully', 'var(--purple)');
+}
+
+// keyboard support for PIN screen
+document.addEventListener('keydown', e => {
+  const screen = document.getElementById('pin-screen');
+  if (screen.style.display === 'none') return;
+  if (e.key >= '0' && e.key <= '9') pinInput(e.key);
+  if (e.key === 'Backspace') pinDelete();
+});
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+clock();
+setInterval(clock,15000);
+renderAll();
+</script>
+<!-- ═══ PIN LOCK SCREEN ═══ -->
+<div id="pin-screen" style="
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+">
+  <div style="
+    background:var(--s1);border:1px solid var(--border);border-radius:18px;
+    padding:40px 44px;width:340px;text-align:center;
+    box-shadow:0 24px 80px rgba(0,0,0,.6);
+    position:relative;overflow:hidden;
+  ">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--of),var(--purple),var(--of));"></div>
+
+    <div style="
+      width:52px;height:52px;border-radius:14px;
+      background:linear-gradient(135deg,#0C2740,#0a4a6e);
+      border:1px solid rgba(0,196,255,.25);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;
+      margin:0 auto 20px;letter-spacing:-.5px;
+    ">IX</div>
+
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.5px;margin-bottom:6px;">The Ninth Room</div>
+    <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:32px;">Enter PIN to continue</div>
+
+    <!-- PIN dots -->
+    <div id="pin-dots" style="display:flex;justify-content:center;gap:12px;margin-bottom:28px;">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+
+    <!-- Numpad -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <div></div>
+      <button class="pin-btn" onclick="pinInput('0')">0</button>
+      <button class="pin-btn pin-del" onclick="pinDelete()">⌫</button>
+    </div>
+
+    <div id="pin-error" style="font-size:11.5px;color:var(--red);margin-top:14px;min-height:18px;opacity:0;transition:opacity .2s;"></div>
+  </div>
+</div>
+
+<style>
+.pin-dot {
+  width:14px;height:14px;border-radius:50%;
+  background:var(--border2);border:1px solid var(--border2);
+  transition:all .2s cubic-bezier(.16,1,.3,1);
+}
+.pin-dot.filled {
+  background:var(--of);border-color:var(--of);
+  box-shadow:0 0 10px rgba(0,196,255,.4);
+  transform:scale(1.1);
+}
+.pin-dot.error {
+  background:var(--red);border-color:var(--red);
+  box-shadow:0 0 10px rgba(240,71,71,.4);
+}
+.pin-btn {
+  background:var(--s2);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:16px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:18px;
+  cursor:pointer;transition:all .12s;user-select:none;
+}
+.pin-btn:hover { background:var(--s3);border-color:var(--border2); }
+.pin-btn:active { transform:scale(.93);background:rgba(0,196,255,.08);border-color:var(--of); }
+.pin-del { font-size:16px;color:var(--sub); }
+@keyframes shake {
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-8px);}
+  40%{transform:translateX(8px);}
+  60%{transform:translateX(-5px);}
+  80%{transform:translateX(5px);}
+}
+.shake { animation:shake .35s ease; }
+</style>
+
+</body>
+</html>

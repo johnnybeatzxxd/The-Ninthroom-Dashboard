@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Sidebar = ({ activePage, setActivePage }) => {
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // update every minute
+        return () => clearInterval(timer);
+    }, []);
+
     const navItems = [
         { id: 'overview', icon: '⬡', label: 'Overview', section: 'Analytics' },
         { id: 'twitter', icon: '𝕏', label: 'Twitter', section: 'Analytics' },
@@ -16,6 +25,14 @@ const Sidebar = ({ activePage, setActivePage }) => {
         { id: 'settings', icon: '⚙', label: 'Settings', section: 'Manage' },
     ];
 
+    const formatDate = (date) => {
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    };
+
+    const formatTime = (date) => {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
+
     return (
         <div className="sidebar">
             <div className="logo">
@@ -28,18 +45,18 @@ const Sidebar = ({ activePage, setActivePage }) => {
 
             {/* Model Switcher */}
             <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>Active Model</div>
+                <div style={{ fontSize: '10.5px', color: 'var(--sub)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Active Model</div>
                 <div id="model-switcher" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}></div>
                 <button
                     onClick={() => setActivePage('models')}
                     style={{
-                        width: '100%', marginTop: '6px', padding: '6px 8px', background: 'transparent',
-                        border: '1px dashed var(--border)', color: 'var(--muted)', borderRadius: '7px',
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', cursor: 'pointer',
+                        width: '100%', marginTop: '6px', padding: '8px 10px', background: 'transparent',
+                        border: '1px dashed var(--border)', color: 'var(--sub)', borderRadius: '7px',
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: '11.5px', cursor: 'pointer',
                         transition: 'all .15s', textAlign: 'left'
                     }}
-                    onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--sub)'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--sub)'; e.currentTarget.style.color = 'var(--text)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--sub)'; }}
                 >
                     + Manage Models
                 </button>
@@ -70,8 +87,8 @@ const Sidebar = ({ activePage, setActivePage }) => {
             </div>
 
             <div className="sidebar-foot">
-                <div className="foot-date" id="sideDate"></div>
-                <div className="foot-time" id="sideTime"></div>
+                <div className="foot-date" id="sideDate">{formatDate(currentTime)}</div>
+                <div className="foot-time" id="sideTime">{formatTime(currentTime)}</div>
                 <div className="live-pill"><div className="live-dot"></div>LIVE</div>
             </div>
         </div>

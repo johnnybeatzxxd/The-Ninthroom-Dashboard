@@ -71,9 +71,15 @@ const Goals = () => {
         return <div className="page active" style={{ padding: '40px' }}><div className="empty">Select or add a model first.</div></div>;
     }
 
-    const totalPct = pct(subsData.total, parseInt(totalTarget || 0));
-    const twPct = pct(subsData.tw, parseInt(twTarget || 0));
-    const igPct = pct(subsData.ig, parseInt(igTarget || 0));
+    // Auto-calculate total target from TW + IG when total is not manually set
+    const parsedTw = parseInt(twTarget || 0);
+    const parsedIg = parseInt(igTarget || 0);
+    const parsedTotal = parseInt(totalTarget || 0);
+    const effectiveTotalTarget = parsedTotal > 0 ? parsedTotal : (parsedTw + parsedIg);
+
+    const totalPct = pct(subsData.total, effectiveTotalTarget);
+    const twPct = pct(subsData.tw, parsedTw);
+    const igPct = pct(subsData.ig, parsedIg);
 
     // Daily required calculation
     const getDailyRequired = (current, target) => {
@@ -85,7 +91,7 @@ const Goals = () => {
         return ((t - current) / Math.max(1, remaining)).toFixed(1);
     };
 
-    const totalDaily = getDailyRequired(subsData.total, totalTarget);
+    const totalDaily = getDailyRequired(subsData.total, effectiveTotalTarget);
     const twDaily = getDailyRequired(subsData.tw, twTarget);
     const igDaily = getDailyRequired(subsData.ig, igTarget);
 
@@ -102,7 +108,7 @@ const Goals = () => {
             <div className="card" style={{ marginBottom: '14px' }}>
                 {isLoading ? (
                     <div className="empty">Loading...</div>
-                ) : !totalTarget ? (
+                ) : !effectiveTotalTarget ? (
                     <div className="empty">Set a monthly target to see progress</div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -110,7 +116,7 @@ const Goals = () => {
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
                                 <span style={{ color: 'var(--text)' }}>Total Subs</span>
-                                <span style={{ color: 'var(--green)' }}>{subsData.total} / {totalTarget} ({totalPct}%)</span>
+                                <span style={{ color: 'var(--green)' }}>{subsData.total} / {effectiveTotalTarget} ({totalPct}%)</span>
                             </div>
                             <div style={{ background: 'var(--s2)', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
                                 <div style={{ width: `${totalPct}%`, height: '100%', background: 'var(--green)', borderRadius: '6px', transition: 'width 0.3s' }}></div>

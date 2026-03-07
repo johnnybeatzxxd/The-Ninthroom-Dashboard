@@ -86,3 +86,10 @@ class Setting(BaseModel):
 
     class Meta:
         table_name = "settings"
+
+class GlobalSetting(BaseModel):
+    key = CharField(primary_key=True, max_length=100)
+    value = TextField(default="")
+
+    class Meta:
+        table_name = "global_settings"

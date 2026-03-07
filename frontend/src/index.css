@@ -1380,3 +1380,182 @@ select.inp {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── PIN LOCK SCREEN ── */
+.pin-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: opacity .35s ease;
+}
+
+.pin-screen.hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pin-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 40px 44px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+  position: relative;
+  overflow: hidden;
+}
+
+.pin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--of), var(--purple), var(--of));
+}
+
+.pin-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0C2740, #0a4a6e);
+  border: 1px solid rgba(0, 196, 255, .25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin: 0 auto 20px;
+  letter-spacing: -.5px;
+}
+
+.pin-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -.5px;
+  margin-bottom: 6px;
+}
+
+.pin-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  transition: all .2s cubic-bezier(.16, 1, .3, 1);
+}
+
+.pin-dot.filled {
+  background: var(--of);
+  border-color: var(--of);
+  box-shadow: 0 0 10px rgba(0, 196, 255, .4);
+  transform: scale(1.1);
+}
+
+.pin-dot.error {
+  background: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 0 10px rgba(240, 71, 71, .4);
+}
+
+.pin-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pin-btn {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all .12s;
+  user-select: none;
+}
+
+.pin-btn:hover {
+  background: var(--s3);
+  border-color: var(--border2);
+}
+
+.pin-btn:active {
+  transform: scale(.93);
+  background: rgba(0, 196, 255, .08);
+  border-color: var(--of);
+}
+
+.pin-del {
+  font-size: 16px;
+  color: var(--sub);
+}
+
+.pin-error {
+  font-size: 11.5px;
+  color: var(--red);
+  margin-top: 14px;
+  min-height: 18px;
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.pin-error.visible {
+  opacity: 1;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-8px);
+  }
+
+  40% {
+    transform: translateX(8px);
+  }
+
+  60% {
+    transform: translateX(-5px);
+  }
+
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.shake {
+  animation: shake .35s ease;
+}

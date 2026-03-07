@@ -149,4 +149,15 @@ export const api = {
             return camelifyObject(data);
         },
     },
+
+    global: {
+        getPin: async () => {
+            const data = await request('GET', '/global/pin');
+            return data.pin;
+        },
+        savePin: async (pin) => {
+            const data = await request('PUT', '/global/pin', { pin });
+            return data.pin;
+        },
+    },
 };

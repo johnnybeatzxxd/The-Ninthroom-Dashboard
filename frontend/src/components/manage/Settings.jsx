@@ -79,14 +79,17 @@ const Settings = () => {
     };
 
     const handleUpdatePin = async () => {
-        if (pin.length !== 4 || pin !== pinConfirm) {
-            alert('PINs must match and be 4 digits');
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            showToast('Error', 'PIN must be exactly 4 digits', 'var(--red)');
+            return;
+        }
+        if (pin !== pinConfirm) {
+            showToast('Error', 'PINs do not match', 'var(--red)');
             return;
         }
         setIsSubmitting(true);
         try {
-            const existing = await api.settings.getForModel(activeModelId);
-            await api.settings.save(activeModelId, { ...existing, pin });
+            await api.global.savePin(pin);
             setPin('');
             setPinConfirm('');
             showToast('PIN updated ✓', 'New PIN saved successfully', 'var(--purple)');

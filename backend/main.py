@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from peewee import OperationalError
 
 from database import db
-from models import ModelEntity, DailyConvoLog, DailySubLog, Refill, Event, Goal, Setting
-from routers import models, logs, refills, config
+from models import ModelEntity, DailyConvoLog, DailySubLog, Refill, Event, Goal, Setting, GlobalSetting
+from routers import models, logs, refills, config, global_settings
 
 import logging
 
@@ -37,7 +37,7 @@ def startup():
             logger.info("Connected to database successfully.")
         
         # Create tables safely
-        db.create_tables([ModelEntity, DailyConvoLog, DailySubLog, Refill, Event, Goal, Setting], safe=True)
+        db.create_tables([ModelEntity, DailyConvoLog, DailySubLog, Refill, Event, Goal, Setting, GlobalSetting], safe=True)
         logger.info("Tables created or already exist.")
     except OperationalError as e:
         logger.error(f"Error connecting to database: {e}")
@@ -53,6 +53,7 @@ app.include_router(models.router)
 app.include_router(logs.router)
 app.include_router(refills.router)
 app.include_router(config.router)
+app.include_router(global_settings.router)
 
 @app.get("/")
 def read_root():

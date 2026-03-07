@@ -68,10 +68,10 @@ const Timeline = () => {
         finally { setIsSubmitting(false); }
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id, modelId) => {
         if (!window.confirm('Delete this event?')) return;
         try {
-            await api.timeline.delete(id);
+            await api.timeline.delete(id, modelId);
             await loadData();
             showToast('Cleared', 'Event deleted', 'var(--red)');
         }
@@ -242,7 +242,7 @@ const Timeline = () => {
                                             {ev.note ? ` · ${ev.note}` : ''}
                                         </div>
                                     </div>
-                                    <button className="ev-del" onClick={() => handleDelete(ev.id)} title="Delete event">✕</button>
+                                    <button className="ev-del" onClick={() => handleDelete(ev.id, ev.modelId)} title="Delete event">✕</button>
                                 </div>
                             ))}
                         </div>

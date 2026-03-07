@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../../context/AppContext';
 
 const Sidebar = ({ activePage, setActivePage }) => {
+    const { models, activeModelId, setActiveModelId, isLoading } = useContext(AppContext);
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
@@ -46,7 +48,27 @@ const Sidebar = ({ activePage, setActivePage }) => {
             {/* Model Switcher */}
             <div style={{ padding: '10px 14px 6px', borderBottom: '1px solid var(--border)' }}>
                 <div style={{ fontSize: '10.5px', color: 'var(--sub)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Active Model</div>
-                <div id="model-switcher" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}></div>
+                <div id="model-switcher" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    {isLoading ? (
+                        <div style={{ color: 'var(--sub)', fontSize: '11px', padding: '6px' }}>Loading models...</div>
+                    ) : models.length === 0 ? (
+                        <div style={{ color: 'var(--sub)', fontSize: '11px', padding: '6px' }}>No models found</div>
+                    ) : (
+                        models.map(model => (
+                            <button
+                                key={model.id}
+                                className={`model-btn ${activeModelId === model.id ? 'active' : ''}`}
+                                onClick={() => setActiveModelId(model.id)}
+                            >
+                                <div
+                                    className="model-dot"
+                                    style={{ background: model.status === 'active' ? 'var(--green)' : 'var(--yellow)' }}
+                                ></div>
+                                <span className="model-name-text">{model.name}</span>
+                            </button>
+                        ))
+                    )}
+                </div>
                 <button
                     onClick={() => setActivePage('models')}
                     style={{

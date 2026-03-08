@@ -35,3 +35,17 @@ async def delete_model(model_id: str):
         return {"success": True}
     except ModelEntity.DoesNotExist:
         raise HTTPException(status_code=404, detail="Model not found")
+
+@router.delete("/{model_id}/clear_data")
+async def clear_model_data(model_id: str):
+    """Deletes all child records (logs, subs, refills, timeline) for a specific model without deleting the model itself."""
+    try:
+        from models import DailyConvoLog, DailySubLog, Refill, Event
+        # Delete child records
+        DailyConvoLog.delete().where(DailyConvoLog.model_id == model_id).execute()
+        DailySubLog.delete().where(DailySubLog.model_id == model_id).execute()
+        Refill.delete().where(Refill.model_id == model_id).execute()
+        Event.delete().where(Event.model_id == model_id).execute()
+        return {"success": True, "message": "All data cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -62,6 +62,9 @@ export const api = {
         delete: async (id) => {
             return request('DELETE', `/models/${id}`);
         },
+        clearData: async (id) => {
+            return request('DELETE', `/models/${id}/clear_data`);
+        },
     },
 
     logs: {

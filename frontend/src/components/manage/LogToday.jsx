@@ -38,10 +38,24 @@ const LogToday = () => {
         if (!activeModelId || !twBalance) return;
         setIsSubmitting(true);
         try {
+            const entered = parseInt(twBalance);
+            let finalSpent = twSpent === '—' ? 0 : twSpent;
+
+            // Auto-refill logic if entered balance > prev balance
+            if (entered > prevTw) {
+                const diff = entered - prevTw;
+                finalSpent = 0; // If balance went up, we assume 0 spent at this exact logging moment, just a refill
+                await api.refills.create(activeModelId, {
+                    platform: 'tw',
+                    amount: diff,
+                    date: twDate
+                });
+            }
+
             await api.logs.create(activeModelId, {
                 date: twDate,
-                twSpent,
-                twRemaining: parseInt(twBalance),
+                twSpent: finalSpent,
+                twRemaining: entered,
                 note: twNote
             });
             // Reset & refresh
@@ -61,10 +75,24 @@ const LogToday = () => {
         if (!activeModelId || !igBalance) return;
         setIsSubmitting(true);
         try {
+            const entered = parseInt(igBalance);
+            let finalSpent = igSpent === '—' ? 0 : igSpent;
+
+            // Auto-refill logic if entered balance > prev balance
+            if (entered > prevIg) {
+                const diff = entered - prevIg;
+                finalSpent = 0; // If balance went up, assume 0 spent, just a refill
+                await api.refills.create(activeModelId, {
+                    platform: 'ig',
+                    amount: diff,
+                    date: igDate
+                });
+            }
+
             await api.logs.create(activeModelId, {
                 date: igDate,
-                igSpent,
-                igRemaining: parseInt(igBalance),
+                igSpent: finalSpent,
+                igRemaining: entered,
                 note: igNote
             });
             // Reset & refresh

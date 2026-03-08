@@ -100,11 +100,24 @@ const Settings = () => {
         }
     };
 
-    const handleDeleteAll = () => {
-        if (!window.confirm('Are you sure? This will delete ALL data and cannot be undone.')) return;
-        localStorage.removeItem('ninth_room_dashboard_data');
-        reloadModels();
-        alert('All data has been cleared. Please refresh the page.');
+    const handleDeleteAll = async () => {
+        const confirmText = window.prompt("Type 'clear' to confirm permanent deletion of all logs, subs, and refills for this model.");
+        if (confirmText !== 'clear') {
+            if (confirmText !== null) showToast('Cancelled', 'You must type "clear" to proceed.', 'var(--muted)');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.models.clearData(activeModelId);
+            showToast('Data Cleared', 'All records have been permanently deleted', 'var(--red)');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (e) {
+            console.error(e);
+            showToast('Error', 'Failed to clear data', 'var(--red)');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!activeModelId) {
